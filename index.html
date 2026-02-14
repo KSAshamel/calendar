@@ -165,29 +165,17 @@
     </div>
 
     <table id="calendar">
-        <thead>
-            <tr>
-                <th>الأحد</th>
-                <th>الاثنين</th>
-                <th>الثلاثاء</th>
-                <th>الأربعاء</th>
-                <th>الخميس</th>
-                <th>الجمعة</th>
-                <th>السبت</th>
-            </tr>
-        </thead>
+        <thead id="days-header"></thead>
         <tbody></tbody>
     </table>
 
 </div>
 
 <script>
-let currentYear = new Date().getFullYear();
-let currentMonth = new Date().getMonth();
-let viewMode = "gregorian";
+let viewMode = "hijri";  // ⭐ العرض الافتراضي = هجري
 
-let hijriYear = null;
-let hijriMonth = null;
+let currentYear, currentMonth;
+let hijriYear, hijriMonth;
 
 const events = [
     { name: "اليوم الوطني السعودي", date: "23-09", type: "national" },
@@ -205,22 +193,27 @@ function formatArabicNumber(num) {
     return num.toString().replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
 }
 
+async function getHijri(day, month, year) {
+    const r = await fetch(`https://api.aladhan.com/v1/gToH?date=${day}-${month}-${year}`);
+    return (await r.json()).data.hijri;
+}
+
 function goToday() {
     const t = new Date();
     currentYear = t.getFullYear();
     currentMonth = t.getMonth();
-    viewMode === "gregorian" ? generateCalendar(currentYear, currentMonth) : convertToHijriAndShow();
+    viewMode === "gregorian" ? generateCalendar() : convertToHijriAndShow();
 }
 
 function prevMonth() {
     if (viewMode === "gregorian") {
         currentMonth--;
         if (currentMonth < 0) { currentMonth = 11; currentYear--; }
-        generateCalendar(currentYear, currentMonth);
+        generateCalendar();
     } else {
         hijriMonth--;
         if (hijriMonth < 1) { hijriMonth = 12; hijriYear--; }
-        generateHijriMonth(hijriYear, hijriMonth);
+        generateHijriMonth();
     }
 }
 
@@ -228,38 +221,43 @@ function nextMonth() {
     if (viewMode === "gregorian") {
         currentMonth++;
         if (currentMonth > 11) { currentMonth = 0; currentYear++; }
-        generateCalendar(currentYear, currentMonth);
+        generateCalendar();
     } else {
         hijriMonth++;
         if (hijriMonth > 12) { hijriMonth = 1; hijriYear++; }
-        generateHijriMonth(hijriYear, hijriMonth);
+        generateHijriMonth();
     }
 }
 
 function toggleView() {
     viewMode = viewMode === "gregorian" ? "hijri" : "gregorian";
-    viewMode === "gregorian" ? generateCalendar(currentYear, currentMonth) : convertToHijriAndShow();
+    viewMode === "gregorian" ? generateCalendar() : convertToHijriAndShow();
 }
 
 async function convertToHijriAndShow() {
     const t = new Date();
-    const r = await fetch(`https://api.aladhan.com/v1/gToH?date=${t.getDate()}-${t.getMonth()+1}-${t.getFullYear()}`);
-    const d = await r.json();
-    hijriYear = d.data.hijri.year;
-    hijriMonth = d.data.hijri.month.number;
-    generateHijriMonth(hijriYear, hijriMonth);
+    const h = await getHijri(t.getDate(), t.getMonth()+1, t.getFullYear());
+    hijriYear = h.year;
+    hijriMonth = h.month.number;
+    generateHijriMonth();
 }
 
-async function getHijri(day, month, year) {
-    const r = await fetch(`https://api.aladhan.com/v1/gToH?date=${day}-${month}-${year}`);
-    const d = await r.json();
-    return d.data.hijri;
-}
-
-async function generateCalendar(year, month) {
-    viewMode = "gregorian";
-
+async function generateCalendar() {
     const today = new Date();
+
+    // ⭐ أسماء الأيام بالإنجليزية
+    document.getElementById("days-header").innerHTML = `
+        <tr>
+            <th>Sunday</th>
+            <th>Monday</th>
+            <th>Tuesday</th>
+            <th>Wednesday</th>
+            <th>Thursday</th>
+            <th>Friday</th>
+            <th>Saturday</th>
+        </tr>
+    `;
+
     const dayName = today.toLocaleDateString("en-US", { weekday: "long" });
     const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
@@ -268,6 +266,9 @@ async function generateCalendar(year, month) {
         ${today.getDate()} ${monthNames[today.getMonth()]} (${today.getMonth()+1}) ${today.getFullYear()}
     `;
 
+    const year = currentYear;
+    const month = currentMonth;
+
     const first = new Date(year, month, 1).getDay();
     const days = new Date(year, month+1, 0).getDate();
 
@@ -275,21 +276,16 @@ async function generateCalendar(year, month) {
     tbody.innerHTML = "";
     let row = document.createElement("tr");
 
-    const todayCheck = new Date();
-
     for (let i=0;i<first;i++) row.appendChild(document.createElement("td"));
 
     for (let d=1; d<=days; d++) {
         const cell = document.createElement("td");
-        const h2 = await getHijri(d, month+1, year);
+        const h = await getHijri(d, month+1, year);
 
-        cell.innerHTML = `<div class="day">${d}</div><div class="hijri">${h2.day}-${h2.month.number} هـ</div>`;
-
-        if (d===todayCheck.getDate() && month===todayCheck.getMonth() && year===todayCheck.getFullYear())
-            cell.classList.add("today");
+        cell.innerHTML = `<div class="day">${d}</div><div class="hijri">${h.day}-${h.month.number} هـ</div>`;
 
         const gKey = `${String(d).padStart(2,"0")}-${String(month+1).padStart(2,"0")}`;
-        const hKey = `${String(h2.day).padStart(2,"0")}-${String(h2.month.number).padStart(2,"0")}`;
+        const hKey = `${String(h.day).padStart(2,"0")}-${String(h.month.number).padStart(2,"0")}`;
 
         events.forEach(e=>{
             if (e.date===gKey || e.hijri===hKey) {
@@ -298,14 +294,29 @@ async function generateCalendar(year, month) {
             }
         });
 
+        if (d === today.getDate() && month === today.getMonth() && year === today.getFullYear())
+            cell.classList.add("today");
+
         row.appendChild(cell);
         if ((first+d)%7===0) { tbody.appendChild(row); row=document.createElement("tr"); }
     }
+
     tbody.appendChild(row);
 }
 
-async function generateHijriMonth(hYear, hMonth) {
-    viewMode = "hijri";
+async function generateHijriMonth() {
+    // ⭐ أسماء الأيام بالعربية
+    document.getElementById("days-header").innerHTML = `
+        <tr>
+            <th>الأحد</th>
+            <th>الاثنين</th>
+            <th>الثلاثاء</th>
+            <th>الأربعاء</th>
+            <th>الخميس</th>
+            <th>الجمعة</th>
+            <th>السبت</th>
+        </tr>
+    `;
 
     const today = new Date();
     const todayHijri = await getHijri(today.getDate(), today.getMonth()+1, today.getFullYear());
@@ -317,7 +328,7 @@ async function generateHijriMonth(hYear, hMonth) {
         ${formatArabicNumber(todayHijri.day)} ${todayHijri.monthName} (${formatArabicNumber(todayHijri.month.number)}) ${formatArabicNumber(todayHijri.year)} هـ
     `;
 
-    const r = await fetch(`https://api.aladhan.com/v1/hToG?date=1-${hMonth}-${hYear}`);
+    const r = await fetch(`https://api.aladhan.com/v1/hToG?date=1-${hijriMonth}-${hijriYear}`);
     const d = await r.json();
     const g = d.data.gregorian;
 
@@ -330,14 +341,14 @@ async function generateHijriMonth(hYear, hMonth) {
     for (let i=0;i<first;i++) row.appendChild(document.createElement("td"));
 
     for (let day=1; day<=30; day++) {
-        const r2 = await fetch(`https://api.aladhan.com/v1/hToG?date=${day}-${hMonth}-${hYear}`);
+        const r2 = await fetch(`https://api.aladhan.com/v1/hToG?date=${day}-${hijriMonth}-${hijriYear}`);
         const d2 = await r2.json();
         const g2 = d2.data.gregorian;
 
         const cell = document.createElement("td");
         cell.innerHTML = `<div class="day">${formatArabicNumber(day)} هـ</div><div class="hijri">${g2.day}-${g2.month.number}-${g2.year} م</div>`;
 
-        const hKey = `${String(day).padStart(2,"0")}-${String(hMonth).padStart(2,"0")}`;
+        const hKey = `${String(day).padStart(2,"0")}-${String(hijriMonth).padStart(2,"0")}`;
         const gKey = `${String(g2.day).padStart(2,"0")}-${String(g2.month.number).padStart(2,"0")}`;
 
         events.forEach(e=>{
@@ -347,13 +358,17 @@ async function generateHijriMonth(hYear, hMonth) {
             }
         });
 
+        if (day === todayHijri.day && hijriMonth === todayHijri.month.number && hijriYear === todayHijri.year)
+            cell.classList.add("today");
+
         row.appendChild(cell);
         if ((first+day)%7===0) { tbody.appendChild(row); row=document.createElement("tr"); }
     }
+
     tbody.appendChild(row);
 }
 
-window.onload = ()=>generateCalendar(currentYear, currentMonth);
+window.onload = ()=>convertToHijriAndShow();  // ⭐ يبدأ بالهجري
 </script>
 
 </body>

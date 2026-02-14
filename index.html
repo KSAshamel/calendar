@@ -138,6 +138,16 @@
         border-radius: 8px;
         font-weight: bold;
     }
+
+    /* صندوق حساب الفرق */
+    #date-diff-box input {
+        width: 250px;
+        padding: 10px;
+        font-size: 18px;
+        border-radius: 6px;
+        border: none;
+        margin-top: 10px;
+    }
 </style>
 </head>
 
@@ -168,6 +178,30 @@
         <thead id="days-header"></thead>
         <tbody></tbody>
     </table>
+
+    <!-- حساب البعد الزمني -->
+    <hr style="margin:40px 0; border-color:#444;">
+
+    <div id="date-diff-box" style="text-align:center; margin-top:30px;">
+        <h3 style="color:#44ff88;">حساب البعد الزمني بين تاريخين</h3>
+
+        <div style="margin:20px 0;">
+            <label>التاريخ الأول:</label><br>
+            <input type="date" id="date1">
+        </div>
+
+        <div style="margin:20px 0;">
+            <label>التاريخ الثاني:</label><br>
+            <input type="date" id="date2">
+        </div>
+
+        <button onclick="calculateDateDiff()" 
+                style="padding:12px 25px; font-size:20px; background:#198754; color:white; border:none; border-radius:8px; cursor:pointer;">
+            احسب
+        </button>
+
+        <div id="diff-result" style="margin-top:25px; font-size:22px; color:#fff;"></div>
+    </div>
 
 </div>
 
@@ -327,7 +361,7 @@ async function generateHijriMonth() {
 
     const dayName = today.toLocaleDateString("ar-SA", { weekday: "long" });
 
-    // ⭐ اسم الشهر الهجري الصحيح من API
+    // ⭐ اسم الشهر الهجري الحقيقي (للعنوان فقط)
     const realMonthName = todayHijri.month.ar;
     const realMonthNumber = todayHijri.month.number;
 
@@ -337,7 +371,7 @@ async function generateHijriMonth() {
         ${formatArabicNumber(todayHijri.day)} ${realMonthName} (${formatArabicNumber(realMonthNumber)}) ${formatArabicNumber(todayHijri.year)} هـ
     `;
 
-    // ⭐ التقويم يعرض الشهر الهجري المعروض (وليس شهر اليوم)
+    // ⭐ جلب بيانات الشهر الهجري المعروض
     const r = await fetch(`https://api.aladhan.com/v1/hToG?date=1-${hijriMonth}-${hijriYear}`);
     const d = await r.json();
     const g = d.data.gregorian;
@@ -368,7 +402,9 @@ async function generateHijriMonth() {
             }
         });
 
-        if (day === todayHijri.day && hijriMonth === todayHijri.month.number && hijriYear === todayHijri.year)
+        if (day === todayHijri.day &&
+            hijriMonth === todayHijri.month.number &&
+            hijriYear === todayHijri.year)
             cell.classList.add("today");
 
         row.appendChild(cell);
@@ -376,6 +412,33 @@ async function generateHijriMonth() {
     }
 
     tbody.appendChild(row);
+}
+
+/* ⭐ حساب البعد الزمني بين تاريخين */
+function calculateDateDiff() {
+    const d1 = document.getElementById("date1").value;
+    const d2 = document.getElementById("date2").value;
+
+    if (!d1 || !d2) {
+        document.getElementById("diff-result").innerHTML = "الرجاء اختيار التاريخين.";
+        return;
+    }
+
+    const date1 = new Date(d1);
+    const date2 = new Date(d2);
+
+    let diffTime = Math.abs(date2 - date1);
+    let diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    let years = Math.floor(diffDays / 365);
+    let months = Math.floor((diffDays % 365) / 30);
+    let days = diffDays - (years * 365) - (months * 30);
+
+    document.getElementById("diff-result").innerHTML = `
+        الفرق بين التاريخين:<br>
+        ${years} سنة — ${months} شهر — ${days} يوم<br>
+        (إجمالي الأيام: ${diffDays})
+    `;
 }
 
 window.onload = ()=>convertToHijriAndShow();  // ⭐ يبدأ بالهجري

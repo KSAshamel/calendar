@@ -321,19 +321,23 @@ async function generateHijriMonth() {
         </tr>
     `;
 
+    // ⭐ تاريخ اليوم الحقيقي (هجري)
     const today = new Date();
     const todayHijri = await getHijri(today.getDate(), today.getMonth()+1, today.getFullYear());
 
     const dayName = today.toLocaleDateString("ar-SA", { weekday: "long" });
 
-    const hMonthName = todayHijri.monthName;
-    const hMonthNumber = todayHijri.month.number;
+    // ⭐ اسم الشهر الهجري الحقيقي (لا يتغير)
+    const realMonthName = todayHijri.monthName;
+    const realMonthNumber = todayHijri.month.number;
 
+    // ⭐ العنوان الصحيح 100٪
     document.getElementById("title").innerHTML = `
         ${dayName}<br>
-        ${formatArabicNumber(todayHijri.day)} ${hMonthName} (${formatArabicNumber(hMonthNumber)}) ${formatArabicNumber(todayHijri.year)} هـ
+        ${formatArabicNumber(todayHijri.day)} ${realMonthName} (${formatArabicNumber(realMonthNumber)}) ${formatArabicNumber(todayHijri.year)} هـ
     `;
 
+    // ⭐ التقويم يعرض الشهر الهجري المعروض (وليس شهر اليوم)
     const r = await fetch(`https://api.aladhan.com/v1/hToG?date=1-${hijriMonth}-${hijriYear}`);
     const d = await r.json();
     const g = d.data.gregorian;

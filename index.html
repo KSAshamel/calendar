@@ -6,30 +6,31 @@
 
 <style>
     body {
-        font-family: "Tahoma", sans-serif;
-        background: #1e1e1e;
-        color: #fff;
+        font-family: Tahoma, Arial, sans-serif;
+        background: #f5f5f5;
+        color: #222;
         margin: 0;
         padding: 0;
         font-size: 18px;
     }
 
     .container {
-        max-width: 900px;
+        max-width: 1000px;
         margin: 40px auto;
-        background: #2c2c2c;
+        background: #ffffff;
         padding: 30px;
         border-radius: 14px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     }
 
     .topbar {
-        background: #157347;
+        background: #4a6fa5;
         padding: 20px;
         text-align: center;
         color: white;
-        font-size: 26px;
+        font-size: 28px;
         font-weight: bold;
+        border-bottom: 4px solid #3b5a85;
     }
 
     #header {
@@ -38,24 +39,30 @@
     }
 
     #header h2 {
-        color: #44ff88;
-        font-size: 24px;
+        color: #4a6fa5;
+        font-size: 26px;
         margin-bottom: 15px;
     }
 
     #header button {
         padding: 10px 20px;
         margin: 4px;
-        background: #198754;
+        background: #4a6fa5;
         color: white;
         border: none;
         border-radius: 8px;
         cursor: pointer;
         font-size: 18px;
+        transition: 0.2s;
+    }
+
+    #header button:hover {
+        background: #3b5a85;
     }
 
     .switch-btn {
-        background: #0d6efd;
+        background: #ffb703;
+        color: #222;
         border-radius: 50%;
         width: 45px;
         height: 45px;
@@ -63,64 +70,66 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        margin-bottom: 10px;
     }
 
     table {
         width: 100%;
         border-collapse: collapse;
-        background: #333;
+        background: #ffffff;
         border-radius: 12px;
         overflow: hidden;
         font-size: 18px;
     }
 
     th {
-        background: #157347;
+        background: #4a6fa5;
         color: white;
-        padding: 10px;
-        border: 1px solid #444;
+        padding: 12px;
+        border: 1px solid #ddd;
     }
 
     td {
-        padding: 10px;
+        padding: 12px;
         text-align: center;
-        border: 1px solid #555;
-        height: 90px;
+        border: 1px solid #eee;
+        height: 100px;
         vertical-align: top;
-        background: #2c2c2c;
+        background: #fafafa;
     }
 
     .day {
         font-size: 22px;
         font-weight: bold;
+        color: #222;
     }
 
     .hijri {
         font-size: 14px;
-        color: #ccc;
+        color: #666;
         margin-top: 6px;
     }
 
     .today {
-        background: #295f2d !important;
-        border: 2px solid #44ff88 !important;
+        background: #e3f2fd !important;
+        border: 2px solid #4a6fa5 !important;
     }
 
     .event-national {
-        background: #003300 !important;
-        border: 2px solid #00cc44 !important;
+        background: #fff4e6 !important;
+        border: 2px solid #ffb703 !important;
     }
 
     .event-religious {
-        background: #4b2e19 !important;
-        border: 2px solid #d2a679 !important;
+        background: #e8f5e9 !important;
+        border: 2px solid #66bb6a !important;
     }
 
     .event-badge {
         display: inline-block;
         margin-top: 6px;
-        padding: 3px 6px;
-        background: #000;
+        padding: 4px 8px;
+        background: #4a6fa5;
         color: white;
         font-size: 12px;
         border-radius: 6px;
@@ -131,9 +140,23 @@
         padding: 8px;
         font-size: 16px;
         border-radius: 6px;
-        border: none;
+        border: 1px solid #ccc;
         margin: 5px;
         width: 120px;
+    }
+
+    #date-diff-box button {
+        background: #4a6fa5;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 18px;
+    }
+
+    #date-diff-box button:hover {
+        background: #3b5a85;
     }
 </style>
 </head>
@@ -157,59 +180,7 @@
         <tbody></tbody>
     </table>
 
-    <hr style="margin:30px 0; border-color:#444;">
-
-    <div id="date-diff-box" style="text-align:center;">
-        <h3 style="color:#44ff88;">حساب البعد الزمني</h3>
-
-        <label><input type="radio" name="mode" value="greg" checked> ميلادي</label>
-        &nbsp;&nbsp;
-        <label><input type="radio" name="mode" value="hijri"> هجري</label>
-
-        <!-- ميلادي -->
-        <div id="gregorian-box" style="margin-top:15px;">
-            <div>
-                <label>التاريخ الأول:</label><br>
-                <select id="g1d"></select>
-                <select id="g1m"></select>
-                <select id="g1y"></select>
-            </div>
-
-            <div>
-                <label>التاريخ الثاني:</label><br>
-                <select id="g2d"></select>
-                <select id="g2m"></select>
-                <select id="g2y"></select>
-            </div>
-        </div>
-
-        <!-- هجري -->
-        <div id="hijri-box" style="display:none; margin-top:15px;">
-            <div>
-                <label>التاريخ الأول:</label><br>
-                <select id="h1d"></select>
-                <select id="h1m"></select>
-                <select id="h1y"></select>
-            </div>
-
-            <div>
-                <label>التاريخ الثاني:</label><br>
-                <select id="h2d"></select>
-                <select id="h2m"></select>
-                <select id="h2y"></select>
-            </div>
-        </div>
-
-        <button onclick="calculateDateDiff()" 
-                style="padding:10px 20px; margin-top:15px; background:#198754; color:white; border:none; border-radius:8px;">
-            احسب
-        </button>
-
-        <div id="diff-result" style="margin-top:15px; font-size:18px;"></div>
-    </div>
-
-</div>
-
+    <hr style="margin:30px 0; border-color:#ddd;">
 <script>
 /* ---------------------- المتغيرات العامة ---------------------- */
 
@@ -284,15 +255,18 @@ function toggleView() {
 async function generateCalendar() {
     document.getElementById("days-header").innerHTML = `
         <tr>
-            <th>Sunday</th><th>Monday</th><th>Tuesday</th>
-            <th>Wednesday</th><th>Thursday</th><th>Friday</th><th>Saturday</th>
+            <th>الأحد</th><th>الاثنين</th><th>الثلاثاء</th>
+            <th>الأربعاء</th><th>الخميس</th><th>الجمعة</th><th>السبت</th>
         </tr>
     `;
 
-    const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    const monthNames = [
+        "يناير","فبراير","مارس","أبريل","مايو","يونيو",
+        "يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"
+    ];
 
     document.getElementById("title").innerHTML =
-        `${monthNames[currentMonth]} (${currentMonth+1}) ${currentYear}`;
+        `${monthNames[currentMonth]} ${currentYear}`;
 
     const first = new Date(currentYear, currentMonth, 1).getDay();
     const days = new Date(currentYear, currentMonth+1, 0).getDate();
@@ -309,7 +283,10 @@ async function generateCalendar() {
         const cell = document.createElement("td");
         const h = await getHijri(d, currentMonth+1, currentYear);
 
-        cell.innerHTML = `<div class="day">${d}</div><div class="hijri">${h.day}-${h.month.number} هـ</div>`;
+        cell.innerHTML = `
+            <div class="day">${d}</div>
+            <div class="hijri">${h.day}-${h.month.number} هـ</div>
+        `;
 
         const gKey = `${String(d).padStart(2,"0")}-${String(currentMonth+1).padStart(2,"0")}`;
         const hKey = `${String(h.day).padStart(2,"0")}-${String(h.month.number).padStart(2,"0")}`;
@@ -335,7 +312,7 @@ async function generateCalendar() {
     if (row.children.length > 0) tbody.appendChild(row);
 }
 
-/* ---------------------- التقويم الهجري ---------------------- */
+/* ---------------------- التقويم الهجري (30 يوم دائمًا) ---------------------- */
 
 async function convertToHijriAndShow() {
     const t = new Date();
@@ -353,13 +330,17 @@ async function generateHijriMonth() {
         </tr>
     `;
 
-    const r = await fetch(`https://api.aladhan.com/v1/hToG?date=1-${hijriMonth}-${hijriYear}`);
-    const d = await r.json();
-    const hInfo = d.data.hijri;
-    const gInfo = d.data.gregorian;
+    const monthNames = [
+        "محرم","صفر","ربيع الأول","ربيع الآخر","جمادى الأولى","جمادى الآخرة",
+        "رجب","شعبان","رمضان","شوال","ذو القعدة","ذو الحجة"
+    ];
 
     document.getElementById("title").innerHTML =
-        `${hInfo.month.ar} (${formatArabicNumber(hInfo.month.number)}) ${formatArabicNumber(hijriYear)} هـ`;
+        `${monthNames[hijriMonth-1]} ${hijriYear} هـ`;
+
+    const r = await fetch(`https://api.aladhan.com/v1/hToG?date=1-${hijriMonth}-${hijriYear}`);
+    const d = await r.json();
+    const gInfo = d.data.gregorian;
 
     const first = new Date(gInfo.year, gInfo.month.number-1, gInfo.day).getDay();
 
@@ -408,7 +389,6 @@ async function generateHijriMonth() {
 
     if (row.children.length > 0) tbody.appendChild(row);
 }
-
 /* ---------------------- إعداد قوائم التاريخ الميلادي ---------------------- */
 
 function setupGregorianSelectors() {
@@ -461,8 +441,113 @@ function updateGregorianDays(prefix) {
     }
 }
 
-/* ---------------------- إعداد قوائم التاريخ الهجري ---------------------- */
+/* ---------------------- إعداد قوائم التاريخ الهجري (30 يوم دائمًا) ---------------------- */
 
 async function setupHijriSelectors() {
     const today = new Date();
-    const h = await
+    const h = await getHijri(today.getDate(), today.getMonth()+1, today.getFullYear());
+    const currentHijriYear = parseInt(h.year);
+
+    const years = [];
+    for (let y = currentHijriYear - 50; y <= currentHijriYear + 50; y++) years.push(y);
+
+    const months = [];
+    for (let m = 1; m <= 12; m++) months.push(m);
+
+    const days = [];
+    for (let d = 1; d <= 30; d++) days.push(d);
+
+    function fill(id, arr) {
+        const sel = document.getElementById(id);
+        sel.innerHTML = "";
+        arr.forEach(v=>{
+            const o = document.createElement("option");
+            o.value = v;
+            o.textContent = v;
+            sel.appendChild(o);
+        });
+    }
+
+    fill("h1d", days);
+    fill("h2d", days);
+    fill("h1m", months);
+    fill("h2m", months);
+    fill("h1y", years);
+    fill("h2y", years);
+
+    // تعيين القيم الافتراضية
+    document.getElementById("h1d").value = parseInt(h.day);
+    document.getElementById("h1m").value = parseInt(h.month.number);
+    document.getElementById("h1y").value = parseInt(h.year);
+
+    document.getElementById("h2d").value = parseInt(h.day);
+    document.getElementById("h2m").value = parseInt(h.month.number);
+    document.getElementById("h2y").value = parseInt(h.year);
+}
+
+/* ---------------------- حساب البعد الزمني ---------------------- */
+
+async function calculateDateDiff() {
+    const mode = document.querySelector("input[name='mode']:checked").value;
+
+    if (mode === "greg") {
+        const d1 = new Date(
+            document.getElementById("g1y").value,
+            document.getElementById("g1m").value - 1,
+            document.getElementById("g1d").value
+        );
+
+        const d2 = new Date(
+            document.getElementById("g2y").value,
+            document.getElementById("g2m").value - 1,
+            document.getElementById("g2d").value
+        );
+
+        showDiff(Math.abs(d2 - d1));
+    }
+
+    else {
+        const d1 = document.getElementById("h1d").value;
+        const m1 = document.getElementById("h1m").value;
+        const y1 = document.getElementById("h1y").value;
+
+        const d2 = document.getElementById("h2d").value;
+        const m2 = document.getElementById("h2m").value;
+        const y2 = document.getElementById("h2y").value;
+
+        const g1 = await fetch(`https://api.aladhan.com/v1/hToG?date=${d1}-${m1}-${y1}`).then(r=>r.json());
+        const g2 = await fetch(`https://api.aladhan.com/v1/hToG?date=${d2}-${m2}-${y2}`).then(r=>r.json());
+
+        const date1 = new Date(g1.data.gregorian.date);
+        const date2 = new Date(g2.data.gregorian.date);
+
+        showDiff(Math.abs(date2 - date1));
+    }
+}
+
+function showDiff(diffTime) {
+    let diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    let years = Math.floor(diffDays / 365);
+    let months = Math.floor((diffDays % 365) / 30);
+    let days = diffDays - (years * 365) - (months * 30);
+
+    document.getElementById("diff-result").innerHTML = `
+        الفرق:<br>
+        ${years} سنة — ${months} شهر — ${days} يوم<br>
+        (إجمالي الأيام: ${diffDays})
+    `;
+}
+
+/* ---------------------- تشغيل الصفحة ---------------------- */
+
+window.onload = async () => {
+    setupGregorianSelectors();
+    await setupHijriSelectors();
+    await convertToHijriAndShow();
+};
+</script>
+
+</div>
+</body>
+</html>

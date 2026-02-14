@@ -30,7 +30,6 @@
         color: white;
         font-size: 26px;
         font-weight: bold;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
 
     #header {
@@ -42,7 +41,6 @@
         color: #44ff88;
         font-size: 24px;
         margin-bottom: 15px;
-        line-height: 1.6;
     }
 
     #header button {
@@ -54,11 +52,6 @@
         border-radius: 8px;
         cursor: pointer;
         font-size: 18px;
-        transition: 0.2s;
-    }
-
-    #header button:hover {
-        background: #157347;
     }
 
     .switch-btn {
@@ -85,7 +78,6 @@
         background: #157347;
         color: white;
         padding: 10px;
-        font-size: 18px;
         border: 1px solid #444;
     }
 
@@ -96,14 +88,11 @@
         height: 90px;
         vertical-align: top;
         background: #2c2c2c;
-        font-size: 16px;
-        color: white;
     }
 
     .day {
         font-size: 22px;
         font-weight: bold;
-        color: #fff;
     }
 
     .hijri {
@@ -115,7 +104,6 @@
     .today {
         background: #295f2d !important;
         border: 2px solid #44ff88 !important;
-        box-shadow: 0 0 8px rgba(0,255,100,0.4);
     }
 
     .event-national {
@@ -139,39 +127,28 @@
         font-weight: bold;
     }
 
-    #date-diff-box select,
-    #date-diff-box input[type="date"] {
+    #date-diff-box select {
         padding: 8px;
         font-size: 16px;
         border-radius: 6px;
         border: none;
-        margin-top: 6px;
-        margin-bottom: 6px;
-        width: 180px;
-    }
-
-    #date-diff-box h3 {
-        margin-bottom: 10px;
+        margin: 5px;
+        width: 120px;
     }
 </style>
 </head>
 
 <body>
 
-<div class="topbar">
-    التقويم
-</div>
+<div class="topbar">التقويم</div>
 
 <div class="container">
 
     <div id="header">
-
         <button class="switch-btn" onclick="toggleView()">🌐</button>
-
         <button onclick="prevMonth()">السابق</button>
         <button onclick="goToday()">اليوم</button>
         <button onclick="nextMonth()">التالي</button>
-
         <h2 id="title"></h2>
     </div>
 
@@ -180,43 +157,42 @@
         <tbody></tbody>
     </table>
 
-    <!-- حساب البعد الزمني -->
     <hr style="margin:30px 0; border-color:#444;">
 
-    <div id="date-diff-box" style="text-align:center; margin-top:10px;">
+    <div id="date-diff-box" style="text-align:center;">
         <h3 style="color:#44ff88;">حساب البعد الزمني</h3>
 
-        <div style="margin:10px 0;">
-            <label>اختر نوع الحساب:</label><br><br>
-
-            <label><input type="radio" name="mode" value="greg" checked> ميلادي</label>
-            &nbsp;&nbsp;&nbsp;
-            <label><input type="radio" name="mode" value="hijri"> هجري</label>
-        </div>
+        <label><input type="radio" name="mode" value="greg" checked> ميلادي</label>
+        &nbsp;&nbsp;
+        <label><input type="radio" name="mode" value="hijri"> هجري</label>
 
         <!-- ميلادي -->
-        <div id="gregorian-box">
-            <div style="margin:10px 0;">
+        <div id="gregorian-box" style="margin-top:15px;">
+            <div>
                 <label>التاريخ الأول:</label><br>
-                <input type="date" id="g1">
+                <select id="g1d"></select>
+                <select id="g1m"></select>
+                <select id="g1y"></select>
             </div>
 
-            <div style="margin:10px 0;">
+            <div>
                 <label>التاريخ الثاني:</label><br>
-                <input type="date" id="g2">
+                <select id="g2d"></select>
+                <select id="g2m"></select>
+                <select id="g2y"></select>
             </div>
         </div>
 
         <!-- هجري -->
-        <div id="hijri-box" style="display:none;">
-            <div style="margin:10px 0;">
+        <div id="hijri-box" style="display:none; margin-top:15px;">
+            <div>
                 <label>التاريخ الأول:</label><br>
                 <select id="h1d"></select>
                 <select id="h1m"></select>
                 <select id="h1y"></select>
             </div>
 
-            <div style="margin:10px 0;">
+            <div>
                 <label>التاريخ الثاني:</label><br>
                 <select id="h2d"></select>
                 <select id="h2m"></select>
@@ -225,21 +201,21 @@
         </div>
 
         <button onclick="calculateDateDiff()" 
-                style="padding:10px 20px; font-size:18px; background:#198754; color:white; border:none; border-radius:8px; cursor:pointer;">
+                style="padding:10px 20px; margin-top:15px; background:#198754; color:white; border:none; border-radius:8px;">
             احسب
         </button>
 
-        <div id="diff-result" style="margin-top:15px; font-size:18px; color:#fff;"></div>
+        <div id="diff-result" style="margin-top:15px; font-size:18px;"></div>
     </div>
 
 </div>
 
 <script>
-let viewMode = "hijri";
+/* ---------------------- المتغيرات العامة ---------------------- */
 
+let viewMode = "hijri";
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
-
 let hijriYear, hijriMonth;
 
 const events = [
@@ -254,25 +230,24 @@ const events = [
     { name: "عيد الأضحى", hijri: "10-12", type: "religious" }
 ];
 
+/* ---------------------- دوال مساعدة ---------------------- */
+
 function formatArabicNumber(num) {
     return num.toString().replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
 }
 
 async function getHijri(day, month, year) {
     const r = await fetch(`https://api.aladhan.com/v1/gToH?date=${day}-${month}-${year}`);
-    const j = await r.json();
-    return j.data.hijri;
+    return (await r.json()).data.hijri;
 }
+
+/* ---------------------- التحكم في التقويم ---------------------- */
 
 function goToday() {
     const t = new Date();
     currentYear = t.getFullYear();
     currentMonth = t.getMonth();
-    if (viewMode === "gregorian") {
-        generateCalendar();
-    } else {
-        convertToHijriAndShow();
-    }
+    viewMode === "gregorian" ? generateCalendar() : convertToHijriAndShow();
 }
 
 function prevMonth() {
@@ -301,31 +276,16 @@ function nextMonth() {
 
 function toggleView() {
     viewMode = (viewMode === "gregorian") ? "hijri" : "gregorian";
-    if (viewMode === "gregorian") {
-        generateCalendar();
-    } else {
-        convertToHijriAndShow();
-    }
+    viewMode === "gregorian" ? generateCalendar() : convertToHijriAndShow();
 }
 
-async function convertToHijriAndShow() {
-    const t = new Date();
-    const h = await getHijri(t.getDate(), t.getMonth()+1, t.getFullYear());
-    hijriYear = parseInt(h.year);
-    hijriMonth = parseInt(h.month.number);
-    generateHijriMonth();
-}
+/* ---------------------- التقويم الميلادي ---------------------- */
 
 async function generateCalendar() {
     document.getElementById("days-header").innerHTML = `
         <tr>
-            <th>Sunday</th>
-            <th>Monday</th>
-            <th>Tuesday</th>
-            <th>Wednesday</th>
-            <th>Thursday</th>
-            <th>Friday</th>
-            <th>Saturday</th>
+            <th>Sunday</th><th>Monday</th><th>Tuesday</th>
+            <th>Wednesday</th><th>Thursday</th><th>Friday</th><th>Saturday</th>
         </tr>
     `;
 
@@ -334,26 +294,24 @@ async function generateCalendar() {
     document.getElementById("title").innerHTML =
         `${monthNames[currentMonth]} (${currentMonth+1}) ${currentYear}`;
 
-    const year = currentYear;
-    const month = currentMonth;
+    const first = new Date(currentYear, currentMonth, 1).getDay();
+    const days = new Date(currentYear, currentMonth+1, 0).getDate();
 
-    const first = new Date(year, month, 1).getDay();
-    const days = new Date(year, month+1, 0).getDate();
-
-    const today = new Date();
     const tbody = document.querySelector("#calendar tbody");
     tbody.innerHTML = "";
-    let row = document.createElement("tr");
 
+    let row = document.createElement("tr");
     for (let i=0;i<first;i++) row.appendChild(document.createElement("td"));
+
+    const today = new Date();
 
     for (let d=1; d<=days; d++) {
         const cell = document.createElement("td");
-        const h = await getHijri(d, month+1, year);
+        const h = await getHijri(d, currentMonth+1, currentYear);
 
         cell.innerHTML = `<div class="day">${d}</div><div class="hijri">${h.day}-${h.month.number} هـ</div>`;
 
-        const gKey = `${String(d).padStart(2,"0")}-${String(month+1).padStart(2,"0")}`;
+        const gKey = `${String(d).padStart(2,"0")}-${String(currentMonth+1).padStart(2,"0")}`;
         const hKey = `${String(h.day).padStart(2,"0")}-${String(h.month.number).padStart(2,"0")}`;
 
         events.forEach(e=>{
@@ -363,7 +321,7 @@ async function generateCalendar() {
             }
         });
 
-        if (d === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+        if (d === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()) {
             cell.classList.add("today");
         }
 
@@ -377,35 +335,33 @@ async function generateCalendar() {
     if (row.children.length > 0) tbody.appendChild(row);
 }
 
+/* ---------------------- التقويم الهجري ---------------------- */
+
+async function convertToHijriAndShow() {
+    const t = new Date();
+    const h = await getHijri(t.getDate(), t.getMonth()+1, t.getFullYear());
+    hijriYear = parseInt(h.year);
+    hijriMonth = parseInt(h.month.number);
+    generateHijriMonth();
+}
+
 async function generateHijriMonth() {
     document.getElementById("days-header").innerHTML = `
         <tr>
-            <th>الأحد</th>
-            <th>الاثنين</th>
-            <th>الثلاثاء</th>
-            <th>الأربعاء</th>
-            <th>الخميس</th>
-            <th>الجمعة</th>
-            <th>السبت</th>
+            <th>الأحد</th><th>الاثنين</th><th>الثلاثاء</th>
+            <th>الأربعاء</th><th>الخميس</th><th>الجمعة</th><th>السبت</th>
         </tr>
     `;
 
-    // تحويل أول يوم من الشهر الهجري إلى ميلادي لمعرفة بداية الأسبوع
     const r = await fetch(`https://api.aladhan.com/v1/hToG?date=1-${hijriMonth}-${hijriYear}`);
     const d = await r.json();
     const hInfo = d.data.hijri;
     const gInfo = d.data.gregorian;
 
-    const displayedMonthName = hInfo.month.ar;
-    const displayedMonthNumber = hInfo.month.number;
-
     document.getElementById("title").innerHTML =
-        `${displayedMonthName} (${formatArabicNumber(displayedMonthNumber)}) ${formatArabicNumber(hijriYear)} هـ`;
+        `${hInfo.month.ar} (${formatArabicNumber(hInfo.month.number)}) ${formatArabicNumber(hijriYear)} هـ`;
 
     const first = new Date(gInfo.year, gInfo.month.number-1, gInfo.day).getDay();
-
-    const today = new Date();
-    const todayHijri = await getHijri(today.getDate(), today.getMonth()+1, today.getFullYear());
 
     const tbody = document.querySelector("#calendar tbody");
     tbody.innerHTML = "";
@@ -413,7 +369,9 @@ async function generateHijriMonth() {
     let row = document.createElement("tr");
     for (let i=0;i<first;i++) row.appendChild(document.createElement("td"));
 
-    // نفترض 30 يومًا، ويمكنك تحسينها لاحقًا لو أردت
+    const today = new Date();
+    const todayHijri = await getHijri(today.getDate(), today.getMonth()+1, today.getFullYear());
+
     for (let day=1; day<=30; day++) {
         const r2 = await fetch(`https://api.aladhan.com/v1/hToG?date=${day}-${hijriMonth}-${hijriYear}`);
         const d2 = await r2.json();
@@ -421,7 +379,7 @@ async function generateHijriMonth() {
 
         const cell = document.createElement("td");
         cell.innerHTML = `
-            <div class="day">${formatArabicNumber(day)} هـ</div>
+            <div class="day">${formatArabicNumber(day)}</div>
             <div class="hijri">${g2.day}-${g2.month.number}-${g2.year} م</div>
         `;
 
@@ -435,9 +393,9 @@ async function generateHijriMonth() {
             }
         });
 
-        if (day === parseInt(todayHijri.day) &&
-            hijriMonth === parseInt(todayHijri.month.number) &&
-            hijriYear === parseInt(todayHijri.year)) {
+        if (day == todayHijri.day &&
+            hijriMonth == todayHijri.month.number &&
+            hijriYear == todayHijri.year) {
             cell.classList.add("today");
         }
 
@@ -451,37 +409,17 @@ async function generateHijriMonth() {
     if (row.children.length > 0) tbody.appendChild(row);
 }
 
-/* إعداد اختيار نوع الحساب (ميلادي/هجري) */
-function setupModeToggle() {
-    document.querySelectorAll("input[name='mode']").forEach(r=>{
-        r.addEventListener("change", ()=>{
-            if (r.value === "greg") {
-                document.getElementById("gregorian-box").style.display = "block";
-                document.getElementById("hijri-box").style.display = "none";
-            } else {
-                document.getElementById("gregorian-box").style.display = "none";
-                document.getElementById("hijri-box").style.display = "block";
-            }
-        });
-    });
-}
+/* ---------------------- إعداد قوائم التاريخ الميلادي ---------------------- */
 
-/* إنشاء قوائم التاريخ الهجري (يوم/شهر/سنة) */
-async function setupHijriSelectors() {
+function setupGregorianSelectors() {
     const today = new Date();
-    const h = await getHijri(today.getDate(), today.getMonth()+1, today.getFullYear());
-    const currentHijriYear = parseInt(h.year);
+    const currentYear = today.getFullYear();
 
     const years = [];
-    for (let y = currentHijriYear - 50; y <= currentHijriYear + 50; y++) {
-        years.push(y);
-    }
-
-    const days = [];
-    for (let i=1;i<=30;i++) days.push(i);
+    for (let y = currentYear - 50; y <= currentYear + 50; y++) years.push(y);
 
     const months = [];
-    for (let i=1;i<=12;i++) months.push(i);
+    for (let m = 1; m <= 12; m++) months.push(m);
 
     function fill(id, arr) {
         const sel = document.getElementById(id);
@@ -494,86 +432,37 @@ async function setupHijriSelectors() {
         });
     }
 
-    fill("h1d", days);
-    fill("h2d", days);
-    fill("h1m", months);
-    fill("h2m", months);
-    fill("h1y", years);
-    fill("h2y", years);
+    fill("g1m", months);
+    fill("g2m", months);
+    fill("g1y", years);
+    fill("g2y", years);
 
-    // تعيين القيم الافتراضية على اليوم الحالي هجريًا
-    document.getElementById("h1d").value = parseInt(h.day);
-    document.getElementById("h1m").value = parseInt(h.month.number);
-    document.getElementById("h1y").value = parseInt(h.year);
+    updateGregorianDays("g1");
+    updateGregorianDays("g2");
 
-    document.getElementById("h2d").value = parseInt(h.day);
-    document.getElementById("h2m").value = parseInt(h.month.number);
-    document.getElementById("h2y").value = parseInt(h.year);
+    document.getElementById("g1m").onchange = ()=>updateGregorianDays("g1");
+    document.getElementById("g1y").onchange = ()=>updateGregorianDays("g1");
+    document.getElementById("g2m").onchange = ()=>updateGregorianDays("g2");
+    document.getElementById("g2y").onchange = ()=>updateGregorianDays("g2");
 }
 
-/* حساب البعد الزمني */
-async function calculateDateDiff() {
-    const mode = document.querySelector("input[name='mode']:checked").value;
+function updateGregorianDays(prefix) {
+    const year = parseInt(document.getElementById(prefix+"y").value);
+    const month = parseInt(document.getElementById(prefix+"m").value);
+    const daysInMonth = new Date(year, month, 0).getDate();
 
-    if (mode === "greg") {
-        const d1 = document.getElementById("g1").value;
-        const d2 = document.getElementById("g2").value;
-
-        if (!d1 || !d2) {
-            document.getElementById("diff-result").innerHTML = "الرجاء اختيار التاريخين.";
-            return;
-        }
-
-        const date1 = new Date(d1);
-        const date2 = new Date(d2);
-
-        showDiff(Math.abs(date2 - date1));
-
-    } else {
-        const d1 = document.getElementById("h1d").value;
-        const m1 = document.getElementById("h1m").value;
-        const y1 = document.getElementById("h1y").value;
-
-        const d2 = document.getElementById("h2d").value;
-        const m2 = document.getElementById("h2m").value;
-        const y2 = document.getElementById("h2y").value;
-
-        if (!d1 || !m1 || !y1 || !d2 || !m2 || !y2) {
-            document.getElementById("diff-result").innerHTML = "الرجاء اختيار التاريخين.";
-            return;
-        }
-
-        const g1 = await fetch(`https://api.aladhan.com/v1/hToG?date=${d1}-${m1}-${y1}`).then(r=>r.json());
-        const g2 = await fetch(`https://api.aladhan.com/v1/hToG?date=${d2}-${m2}-${y2}`).then(r=>r.json());
-
-        const date1 = new Date(g1.data.gregorian.date);
-        const date2 = new Date(g2.data.gregorian.date);
-
-        showDiff(Math.abs(date2 - date1));
+    const sel = document.getElementById(prefix+"d");
+    sel.innerHTML = "";
+    for (let d=1; d<=daysInMonth; d++) {
+        const o = document.createElement("option");
+        o.value = d;
+        o.textContent = d;
+        sel.appendChild(o);
     }
 }
 
-function showDiff(diffTime) {
-    let diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+/* ---------------------- إعداد قوائم التاريخ الهجري ---------------------- */
 
-    let years = Math.floor(diffDays / 365);
-    let months = Math.floor((diffDays % 365) / 30);
-    let days = diffDays - (years * 365) - (months * 30);
-
-    document.getElementById("diff-result").innerHTML = `
-        الفرق:<br>
-        ${years} سنة — ${months} شهر — ${days} يوم<br>
-        (إجمالي الأيام: ${diffDays})
-    `;
-}
-
-/* تشغيل كل شيء عند تحميل الصفحة */
-window.onload = async () => {
-    setupModeToggle();
-    await setupHijriSelectors();
-    await convertToHijriAndShow();
-};
-</script>
-
-</body>
-</html>
+async function setupHijriSelectors() {
+    const today = new Date();
+    const h = await

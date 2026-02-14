@@ -327,8 +327,8 @@ async function generateHijriMonth() {
 
     const dayName = today.toLocaleDateString("ar-SA", { weekday: "long" });
 
-    // ⭐ اسم الشهر الهجري الحقيقي (لا يتغير)
-    const realMonthName = todayHijri.monthName;
+    // ⭐ اسم الشهر الهجري الصحيح من API
+    const realMonthName = todayHijri.month.ar;
     const realMonthNumber = todayHijri.month.number;
 
     // ⭐ العنوان الصحيح 100٪

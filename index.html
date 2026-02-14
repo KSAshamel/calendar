@@ -174,7 +174,9 @@
 <script>
 let viewMode = "hijri";  // ⭐ العرض الافتراضي = هجري
 
-let currentYear, currentMonth;
+let currentYear = new Date().getFullYear();
+let currentMonth = new Date().getMonth();
+
 let hijriYear, hijriMonth;
 
 const events = [
@@ -305,6 +307,7 @@ async function generateCalendar() {
 }
 
 async function generateHijriMonth() {
+
     // ⭐ أسماء الأيام بالعربية
     document.getElementById("days-header").innerHTML = `
         <tr>
@@ -323,9 +326,12 @@ async function generateHijriMonth() {
 
     const dayName = today.toLocaleDateString("ar-SA", { weekday: "long" });
 
+    const hMonthName = todayHijri.monthName;
+    const hMonthNumber = todayHijri.month.number;
+
     document.getElementById("title").innerHTML = `
         ${dayName}<br>
-        ${formatArabicNumber(todayHijri.day)} ${todayHijri.monthName} (${formatArabicNumber(todayHijri.month.number)}) ${formatArabicNumber(todayHijri.year)} هـ
+        ${formatArabicNumber(todayHijri.day)} ${hMonthName} (${formatArabicNumber(hMonthNumber)}) ${formatArabicNumber(todayHijri.year)} هـ
     `;
 
     const r = await fetch(`https://api.aladhan.com/v1/hToG?date=1-${hijriMonth}-${hijriYear}`);

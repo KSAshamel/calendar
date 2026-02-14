@@ -259,14 +259,13 @@ async function getHijri(day, month, year) {
 async function generateCalendar(year, month) {
     viewMode = "gregorian";
 
+    const today = new Date();
+    const dayName = today.toLocaleDateString("en-US", { weekday: "long" });
     const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-
-    const gDate = new Date(year, month, 1);
-    const dayName = gDate.toLocaleDateString("en-US", { weekday: "long" });
 
     document.getElementById("title").innerHTML = `
         ${dayName}<br>
-        ${1} ${monthNames[month]} (${month + 1}) ${year}
+        ${today.getDate()} ${monthNames[today.getMonth()]} (${today.getMonth()+1}) ${today.getFullYear()}
     `;
 
     const first = new Date(year, month, 1).getDay();
@@ -276,7 +275,7 @@ async function generateCalendar(year, month) {
     tbody.innerHTML = "";
     let row = document.createElement("tr");
 
-    const today = new Date();
+    const todayCheck = new Date();
 
     for (let i=0;i<first;i++) row.appendChild(document.createElement("td"));
 
@@ -286,7 +285,7 @@ async function generateCalendar(year, month) {
 
         cell.innerHTML = `<div class="day">${d}</div><div class="hijri">${h2.day}-${h2.month.number} هـ</div>`;
 
-        if (d===today.getDate() && month===today.getMonth() && year===today.getFullYear())
+        if (d===todayCheck.getDate() && month===todayCheck.getMonth() && year===todayCheck.getFullYear())
             cell.classList.add("today");
 
         const gKey = `${String(d).padStart(2,"0")}-${String(month+1).padStart(2,"0")}`;
@@ -308,19 +307,19 @@ async function generateCalendar(year, month) {
 async function generateHijriMonth(hYear, hMonth) {
     viewMode = "hijri";
 
-    const r = await fetch(`https://api.aladhan.com/v1/hToG?date=1-${hMonth}-${hYear}`);
-    const d = await r.json();
-    const g = d.data.gregorian;
+    const today = new Date();
+    const todayHijri = await getHijri(today.getDate(), today.getMonth()+1, today.getFullYear());
 
-    const hMonthName = d.data.hijri.month.ar;
-
-    const gDate = new Date(g.year, g.month.number - 1, g.day);
-    const dayName = gDate.toLocaleDateString("ar-SA", { weekday: "long" });
+    const dayName = today.toLocaleDateString("ar-SA", { weekday: "long" });
 
     document.getElementById("title").innerHTML = `
         ${dayName}<br>
-        ${formatArabicNumber(d.data.hijri.day)} ${hMonthName} (${formatArabicNumber(hMonth)}) ${formatArabicNumber(hYear)} هـ
+        ${formatArabicNumber(todayHijri.day)} ${todayHijri.monthName} (${formatArabicNumber(todayHijri.month.number)}) ${formatArabicNumber(todayHijri.year)} هـ
     `;
+
+    const r = await fetch(`https://api.aladhan.com/v1/hToG?date=1-${hMonth}-${hYear}`);
+    const d = await r.json();
+    const g = d.data.gregorian;
 
     const first = new Date(g.year, g.month.number-1, g.day).getDay();
 

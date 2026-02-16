@@ -189,38 +189,32 @@
         &nbsp;&nbsp;
         <label><input type="radio" name="mode" value="hijri"> هجري</label>
 
-        <!-- ميلادي -->
         <div id="gregorian-box" style="margin-top:15px;">
-            <div>
-                <label>التاريخ الأول:</label><br>
-                <select id="g1d"></select>
-                <select id="g1m"></select>
-                <select id="g1y"></select>
-            </div>
+            <label>التاريخ الأول:</label><br>
+            <select id="g1d"></select>
+            <select id="g1m"></select>
+            <select id="g1y"></select>
 
-            <div>
-                <label>التاريخ الثاني:</label><br>
-                <select id="g2d"></select>
-                <select id="g2m"></select>
-                <select id="g2y"></select>
-            </div>
+            <br><br>
+
+            <label>التاريخ الثاني:</label><br>
+            <select id="g2d"></select>
+            <select id="g2m"></select>
+            <select id="g2y"></select>
         </div>
 
-        <!-- هجري -->
         <div id="hijri-box" style="display:none; margin-top:15px;">
-            <div>
-                <label>التاريخ الأول:</label><br>
-                <select id="h1d"></select>
-                <select id="h1m"></select>
-                <select id="h1y"></select>
-            </div>
+            <label>التاريخ الأول:</label><br>
+            <select id="h1d"></select>
+            <select id="h1m"></select>
+            <select id="h1y"></select>
 
-            <div>
-                <label>التاريخ الثاني:</label><br>
-                <select id="h2d"></select>
-                <select id="h2m"></select>
-                <select id="h2y"></select>
-            </div>
+            <br><br>
+
+            <label>التاريخ الثاني:</label><br>
+            <select id="h2d"></select>
+            <select id="h2m"></select>
+            <select id="h2y"></select>
         </div>
 
         <button onclick="calculateDateDiff()" style="margin-top:15px;">احسب</button>
@@ -339,9 +333,7 @@ function generateCalendar() {
     for (let d=1; d<=days; d++) {
         const cell = document.createElement("td");
 
-        cell.innerHTML = `
-            <div class="day">${d}</div>
-        `;
+        cell.innerHTML = `<div class="day">${d}</div>`;
 
         const gKey = `${String(d).padStart(2,"0")}-${String(currentMonth+1).padStart(2,"0")}`;
 
@@ -366,7 +358,7 @@ function generateCalendar() {
     if (row.children.length > 0) tbody.appendChild(row);
 }
 
-/* ---------------------- التقويم الهجري السريع ---------------------- */
+/* ---------------------- التقويم الهجري ---------------------- */
 
 function generateHijriMonth() {
     document.getElementById("days-header").innerHTML = `
@@ -425,7 +417,7 @@ function generateHijriMonth() {
     if (row.children.length > 0) tbody.appendChild(row);
 }
 
-/* ---------------------- التحكم في التقويم ---------------------- */
+/* ---------------------- التحكم ---------------------- */
 
 function goToday() {
     const t = new Date();
@@ -468,29 +460,11 @@ function toggleView() {
     viewMode === "gregorian" ? generateCalendar() : generateHijriMonth();
 }
 
-/* ---------------------- إعداد قوائم التاريخ الميلادي ---------------------- */
+/* ---------------------- إعداد القوائم الميلادية ---------------------- */
 
 function setupGregorianSelectors() {
     const today = new Date();
     const currentYear = today.getFullYear();
 
     const years = [];
-    for (let y = currentYear - 50; y <= currentYear + 50; y++) years.push(y);
-
-    const months = [];
-    for (let m = 1; m <= 12; m++) months.push(m);
-
-    function fill(id, arr) {
-        const sel = document.getElementById(id);
-        sel.innerHTML = "";
-        arr.forEach(v=>{
-            const o = document.createElement("option");
-            o.value = v;
-            o.textContent = v;
-            sel.appendChild(o);
-        });
-    }
-
-    fill("g1m", months);
-    fill("g2m", months);
-   
+    for (let y = currentYear - 50; y <= currentYear + 50; y++)

@@ -467,4 +467,28 @@ function setupGregorianSelectors() {
     const currentYear = today.getFullYear();
 
     const years = [];
-    for (let y = currentYear - 50; y <= currentYear + 50; y++)
+    for (let y = currentYear - 50; y <= currentYear + 50; y++) years.push(y);
+
+    const months = [];
+    for (let m = 1; m <= 12; m++) months.push(m);
+
+    function fill(id, arr) {
+        const sel = document.getElementById(id);
+        sel.innerHTML = "";
+        arr.forEach(v=>{
+            const o = document.createElement("option");
+            o.value = v;
+            o.textContent = v;
+            sel.appendChild(o);
+        });
+    }
+
+    fill("g1m", months);
+    fill("g2m", months);
+    fill("g1y", years);
+    fill("g2y", years);
+
+    updateGregorianDays("g1");
+    updateGregorianDays("g2");
+
+    document.getElementById("g1m").onchange = ()=>updateGregorianDays("

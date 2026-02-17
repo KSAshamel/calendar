@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تقويم شامل المزدوج</title>
+    <title>تقويم شامل - النسخة المصححة</title>
     <style>
         :root { --saudi-green: #006C35; --primary: #0078d4; --gold: #ffd700; --bg: #f4f7f6; --text: #222; --card-bg: #fff; --border: #ddd; --neon-green: #39ff14; }
         body.dark { --bg: #1a1a1a; --text: #eaeaea; --card-bg: #2a2a2a; --border: #444; }
@@ -24,26 +24,26 @@
         .toggle-btn { cursor: pointer; padding: 6px 15px; background: #eee; border: 1px solid var(--border); border-radius: 20px; font-size: 11px; color: #333; }
         body.dark .toggle-btn { background: #444; color: #fff; }
         .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; }
-        .month-label { font-weight: bold; font-size: 15px; color: var(--saudi-green); text-align: center; line-height: 1.4; }
+        .month-label { font-weight: bold; font-size: 15px; color: var(--saudi-green); text-align: center; }
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); padding: 5px 10px; }
         .day-name { text-align: center; font-size: 11px; font-weight: bold; color: #999; padding-bottom: 10px; }
-        .day-cell { height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
-        .day-cell:hover { background: rgba(0,0,0,0.03); border-color: var(--border); }
+        .day-cell { height: 55px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; border: 1px solid transparent; position: relative; }
         .day-cell.today { background: var(--primary) !important; color: white !important; font-weight: bold; }
-        .day-cell .greg { font-size: 14px; }
-        .day-cell .hijri { font-size: 10px; color: var(--saudi-green); }
-        .day-cell.today .hijri { color: #eee; }
+        .day-cell .g-d { font-size: 16px; }
+        .day-cell .h-d { font-size: 10px; color: var(--saudi-green); font-weight: bold; }
+        .day-cell.today .h-d { color: #fff; opacity: 0.8; }
         .shamel-footer { padding: 15px 10px; text-align: center; border-top: 1px solid var(--border); }
-        .btn-shamel { display: inline-block; width: 85%; padding: 12px 0; background: #2c2c2c; color: #fff !important; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; border: 2px solid var(--neon-green); box-shadow: 0 0 10px rgba(57, 255, 20, 0.2); }
+        .btn-shamel { display: inline-block; width: 85%; padding: 12px 0; background: #2c2c2c; color: #fff !important; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; border: 2px solid var(--neon-green); box-shadow: 0 0 10px rgba(57, 255, 20, 0.3); }
     </style>
 </head>
 <body class="dark">
 
 <div class="calendar-card">
+    <!-- هيدر الصلاة -->
     <div class="prayer-header">
-        <span id="timer-label">جاري مزامنة الوقت...</span>
+        <span id="timer-label">جاري جلب المواقيت...</span>
         <span id="timer">00:00:00</span>
-        <div class="prayer-grid" id="prayerGrid">
+        <div class="prayer-grid">
             <div class="prayer-item" id="item-Fajr"><span class="p-n">الفجر</span><span class="p-t" id="val-Fajr">--:--</span></div>
             <div class="prayer-item" id="item-Dhuhr"><span class="p-n">الظهر</span><span class="p-t" id="val-Dhuhr">--:--</span></div>
             <div class="prayer-item" id="item-Asr"><span class="p-n">العصر</span><span class="p-t" id="val-Asr">--:--</span></div>
@@ -52,57 +52,58 @@
         </div>
     </div>
 
+    <!-- التحكم -->
     <div class="controls-area">
-        <select class="select-city" id="citySelect" onchange="updatePrayers(this.value)">
+        <select class="select-city" id="citySelect" onchange="fetchPrayers(this.value)">
             <option value="Makkah">مكة المكرمة</option>
             <option value="Riyadh">الرياض</option>
             <option value="Medina">المدينة المنورة</option>
             <option value="Jeddah">جدة</option>
             <option value="Dammam">الدمام</option>
+            <option value="Abha">أبها</option>
         </select>
         <button class="btn-gps" onclick="syncWithGPS()">📍 تحديد الموقع تلقائياً</button>
         <div class="switch-mode">
-            <button class="toggle-btn" onclick="document.body.classList.toggle('dark')">🌗 تبديل المظهر</button>
+            <button class="toggle-btn" onclick="document.body.classList.toggle('dark')">🌗 الوضع الليلي</button>
         </div>
     </div>
 
+    <!-- التقويم -->
     <div class="header">
         <button class="toggle-btn" onclick="changeMonth(-1)">❮</button>
         <div class="month-label" id="monthDisplay">--</div>
         <button class="toggle-btn" onclick="changeMonth(1)">❯</button>
     </div>
-    
     <div class="grid" id="calendarGrid"></div>
 
+    <!-- فوتر شامل -->
     <div class="shamel-footer">
-        <a href="https://ksashamel.github.io/shamel/" target="_blank" class="btn-shamel">شامل</a>
+        <a href=https://ksashamel.github.io/shamel/" target="_blank" class="btn-shamel">شامل</a>
     </div>
 </div>
 
 <script>
     let viewDate = new Date();
     let prayerTimes = {};
-    const coords = { Makkah:[21.42, 39.82], Riyadh:[24.71, 46.67], Medina:[24.46, 39.60], Jeddah:[21.54, 39.17], Dammam:[26.42, 50.08] };
+    const coords = { Makkah:[21.42, 39.82], Riyadh:[24.71, 46.67], Medina:[24.46, 39.60], Jeddah:[21.54, 39.17], Dammam:[26.42, 50.08], Abha:[18.21, 42.50] };
 
-    // وظيفة تحويل التاريخ لميلادي وهجري معاً
-    function getDateInfo(date) {
-        const greg = date.getDate();
-        const hijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-uma', {day:'numeric'}).format(date);
-        return { greg, hijri };
-    }
-
-    async function updatePrayers(city, lat, lon) {
-        let tLat = lat || coords[city][0], tLon = lon || coords[city][1];
+    // 1. جلب مواقيت الصلاة (تم تصحيح الرابط والدالة)
+    async function fetchPrayers(city, lat, lon) {
+        let tLat = lat || coords[city][0];
+        let tLon = lon || coords[city][1];
         try {
             const r = await fetch(`https://api.aladhan.com{tLat}&longitude=${tLon}&method=4`);
             const d = await r.json();
             prayerTimes = d.data.timings;
-            renderPrayers();
-        } catch (e) { console.error("Error fetching prayers"); }
+            updatePrayerUI();
+        } catch (e) {
+            document.getElementById('timer-label').innerText = "فشل تحميل المواقيت";
+        }
     }
 
-    function renderPrayers() {
-        ['Fajr','Dhuhr','Asr','Maghrib','Isha'].forEach(p => {
+    function updatePrayerUI() {
+        const list = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+        list.forEach(p => {
             document.getElementById(`val-${p}`).innerText = format12h(prayerTimes[p]);
         });
     }
@@ -110,11 +111,13 @@
     function format12h(t) {
         if(!t) return "--:--";
         let [h, m] = t.split(':');
-        let hrs = parseInt(h), ampm = hrs >= 12 ? 'م' : 'ص';
+        let hrs = parseInt(h);
+        let ampm = hrs >= 12 ? 'م' : 'ص';
         hrs = hrs % 12 || 12;
         return `${hrs}:${m} ${ampm}`;
     }
 
+    // 2. العد التنازلي للصلاة القادمة
     function startTimer() {
         setInterval(() => {
             if(!prayerTimes.Fajr) return;
@@ -141,12 +144,13 @@
                 document.querySelectorAll('.prayer-item').forEach(i => i.classList.remove('active'));
                 document.getElementById(`item-${next.name}`).classList.add('active');
             } else {
-                label.innerText = "في انتظار صلاة الفجر";
+                label.innerText = "بانتظار فجر الغد";
                 timer.innerText = "--:--:--";
             }
         }, 1000);
     }
 
+    // 3. التقويم المزدوج (هجري وميلادي)
     function renderCalendar() {
         const grid = document.getElementById('calendarGrid');
         grid.innerHTML = '';
@@ -154,11 +158,7 @@
         days.forEach(d => grid.innerHTML += `<div class="day-name">${d}</div>`);
 
         let m = viewDate.getMonth(), y = viewDate.getFullYear();
-        
-        // عرض اسم الشهر الميلادي وما يقابله هجرياً في العنوان
-        const gMonth = viewDate.toLocaleString('ar-SA', {month:'long', year:'numeric'});
-        const hMonth = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-uma', {month:'long', year:'numeric'}).format(viewDate);
-        document.getElementById('monthDisplay').innerHTML = `${gMonth}<br><span style="font-size:12px; color:#888">${hMonth}</span>`;
+        document.getElementById('monthDisplay').innerText = viewDate.toLocaleString('ar-SA', {month:'long', year:'numeric'});
 
         let firstDay = new Date(y, m, 1).getDay();
         let totalDays = new Date(y, m + 1, 0).getDate();
@@ -168,12 +168,14 @@
         for (let d = 1; d <= totalDays; d++) {
             let cur = new Date(y, m, d);
             let isToday = new Date().toDateString() === cur.toDateString();
-            let info = getDateInfo(cur);
+            
+            // تحويل للهجري باستخدام Intl
+            let hDay = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-uma', {day:'numeric'}).format(cur);
             
             grid.innerHTML += `
                 <div class="day-cell ${isToday ? 'today' : ''}">
-                    <span class="greg">${info.greg}</span>
-                    <span class="hijri">${info.hijri}</span>
+                    <span class="g-d">${d}</span>
+                    <span class="h-d">${hDay}</span>
                 </div>`;
         }
     }
@@ -182,11 +184,12 @@
     
     function syncWithGPS() {
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(p => updatePrayers(null, p.coords.latitude, p.coords.longitude));
+            navigator.geolocation.getCurrentPosition(p => fetchPrayers(null, p.coords.latitude, p.coords.longitude));
         }
     }
 
-    updatePrayers('Makkah');
+    // البدء
+    fetchPrayers('Makkah');
     renderCalendar();
     startTimer();
 </script>

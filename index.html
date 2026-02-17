@@ -3,32 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تقويم أم القرى الشامل</title>
+    <title>تقويم أم القرى الشامل - النسخة النهائية</title>
     <style>
         :root { --saudi-green: #006C35; --primary: #0078d4; --gold: #ffd700; --bg: #f4f7f6; --text: #222; --card-bg: #fff; --border: #ddd; }
         body.dark { --bg: #1a1a1a; --text: #eaeaea; --card-bg: #2a2a2a; --border: #444; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 20px; margin: 0; transition: 0.3s; }
         .calendar-card { background: var(--card-bg); width: 100%; max-width: 420px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid var(--border); }
+        
         .prayer-header { background: #222; color: #fff; padding: 15px; text-align: center; border-bottom: 3px solid var(--saudi-green); }
         #timer { color: var(--gold); font-weight: bold; font-family: monospace; font-size: 17px; }
         .prayer-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 10px; }
         .prayer-item { background: rgba(255,255,255,0.1); padding: 8px 2px; border-radius: 6px; text-align: center; }
         .p-n { display: block; font-size: 10px; color: #bbb; }
         .p-t { display: block; font-size: 12px; font-weight: bold; color: var(--gold); }
+
         .controls-area { padding: 15px; background: var(--card-bg); border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
         .select-city { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); font-family: inherit; font-size: 14px; }
         .btn-gps { width: 100%; padding: 10px; background: var(--saudi-green); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
         #current-location-display { text-align: center; font-size: 13px; font-weight: bold; color: var(--primary); padding: 5px; border-radius: 5px; background: rgba(0, 120, 212, 0.05); }
+
         .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; }
         .nav-btn { cursor: pointer; border: none; background: #f0f0f0; padding: 8px 14px; border-radius: 6px; }
         body.dark .nav-btn { background: #444; color: #fff; }
+
         .switch-mode { display: flex; justify-content: center; padding: 10px; gap: 10px; }
         .toggle-btn { cursor: pointer; padding: 6px 15px; background: #eee; border: 1px solid var(--border); border-radius: 20px; font-size: 12px; color: #444; }
         body.dark .toggle-btn { background: #444; color: #fff; }
+
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); padding: 10px; }
         .day-name { text-align: center; font-size: 11px; font-weight: bold; color: #999; padding-bottom: 10px; }
-        .day-cell { height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 15px; }
+        .day-cell { height: 65px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; font-size: 15px; position: relative; border: 1px solid transparent; }
         .day-cell.today { background: var(--primary); color: white; font-weight: bold; }
+        .day-num { font-weight: bold; }
+        
+        /* المناسبات */
+        .event-icon { font-size: 12px; margin-top: 4px; }
+        .saudi-flag { width: 18px; height: 12px; background: var(--saudi-green); border-radius: 2px; margin-top: 4px; border: 1px solid white; }
+
+        /* التلميح */
+        .day-cell:hover::after {
+            content: attr(data-event); position: absolute; bottom: 100%; background: #333; color: #fff;
+            padding: 4px 8px; border-radius: 4px; font-size: 10px; white-space: nowrap; z-index: 100;
+        }
+        .day-cell[data-event=""]:hover::after { display: none; }
     </style>
 </head>
 <body>
@@ -58,7 +75,6 @@
             <option value="Buraidah">بريدة</option>
             <option value="Jizan">جيزان</option>
             <option value="Najran">نجران</option>
-            <option value="Taif">الطائف</option>
         </select>
         <button class="btn-gps" onclick="syncLocation()">📍 تحديد أقرب مدينة تلقائياً</button>
         <div id="current-location-display">المدينة الحالية: مكة المكرمة</div>
@@ -80,7 +96,6 @@
 <script>
     let viewDate = new Date(), isHijri = true, countdownInterval;
 
-    // قاعدة بيانات مدمجة بالإحداثيات لعمل الحسابات محلياً
     const saudiCitiesData = {
         Makkah: { name: "مكة المكرمة", lat: 21.42, lon: 39.82, Fajr: "05:18", Dhuhr: "12:28", Asr: "15:48", Maghrib: "18:22", Isha: "19:52" },
         Riyadh: { name: "الرياض", lat: 24.71, lon: 46.67, Fajr: "04:55", Dhuhr: "12:05", Asr: "15:25", Maghrib: "17:58", Isha: "19:28" },
@@ -92,8 +107,12 @@
         Hail: { name: "حائل", lat: 27.52, lon: 41.68, Fajr: "05:18", Dhuhr: "12:22", Asr: "15:48", Maghrib: "18:15", Isha: "19:45" },
         Buraidah: { name: "بريدة", lat: 26.32, lon: 43.97, Fajr: "05:08", Dhuhr: "12:15", Asr: "15:38", Maghrib: "18:08", Isha: "19:38" },
         Jizan: { name: "جيزان", lat: 16.88, lon: 42.55, Fajr: "05:15", Dhuhr: "12:25", Asr: "15:45", Maghrib: "18:18", Isha: "19:48" },
-        Najran: { name: "نجران", lat: 17.49, lon: 44.12, Fajr: "05:05", Dhuhr: "12:15", Asr: "15:35", Maghrib: "18:08", Isha: "19:38" },
-        Taif: { name: "الطائف", lat: 21.26, lon: 40.41, Fajr: "05:16", Dhuhr: "12:26", Asr: "15:46", Maghrib: "18:20", Isha: "19:50" }
+        Najran: { name: "نجران", lat: 17.49, lon: 44.12, Fajr: "05:05", Dhuhr: "12:15", Asr: "15:35", Maghrib: "18:08", Isha: "19:38" }
+    };
+
+    const events = {
+        hijri: { '9/1': ['رمضان', '🌙'], '10/1': ['عيد الفطر', '🎆'], '12/9': ['يوم عرفة', '🕋'], '12/10': ['عيد الأضحى', '🐏'] },
+        greg: { '9/23': ['اليوم الوطني', 'flag'], '2/22': ['يوم التأسيس', 'flag'], '3/11': ['يوم العلم', 'flag'] }
     };
 
     let currentPrayerTimes = saudiCitiesData.Makkah;
@@ -105,54 +124,31 @@
     }
 
     function applyTimes() {
-        ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].forEach(p => {
-            document.getElementById(p).innerText = currentPrayerTimes[p];
-        });
+        ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].forEach(p => document.getElementById(p).innerText = currentPrayerTimes[p]);
         startCountdown();
     }
 
-    // حساب المسافة بين نقطتين (قانون هافرسين) محلياً
     function getDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371; // نصف قطر الأرض بالكيلومتر
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c;
+        const R = 6371;
+        const dLat = (lat2-lat1)*Math.PI/180;
+        const dLon = (lon2-lon1)*Math.PI/180;
+        const a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
     function syncLocation() {
         const display = document.getElementById('current-location-display');
-        if (!navigator.geolocation) {
-            alert("المتصفح لا يدعم تحديد الموقع");
-            return;
-        }
-        display.innerText = "جاري البحث عن أقرب مدينة...";
-        
+        if (!navigator.geolocation) return alert("الموقع غير مدعوم");
+        display.innerText = "جاري البحث...";
         navigator.geolocation.getCurrentPosition((pos) => {
-            const userLat = pos.coords.latitude;
-            const userLon = pos.coords.longitude;
-            
-            let closestCityId = "Makkah";
-            let minDistance = Infinity;
-
-            // البحث في القاعدة المحلية عن أقرب إحداثيات لموقع المستخدم
+            let closest = "Makkah", min = Infinity;
             for (let id in saudiCitiesData) {
-                const dist = getDistance(userLat, userLon, saudiCitiesData[id].lat, saudiCitiesData[id].lon);
-                if (dist < minDistance) {
-                    minDistance = dist;
-                    closestCityId = id;
-                }
+                const d = getDistance(pos.coords.latitude, pos.coords.longitude, saudiCitiesData[id].lat, saudiCitiesData[id].lon);
+                if (d < min) { min = d; closest = id; }
             }
-            
-            document.getElementById('citySelect').value = closestCityId;
-            updateByManualSelection(closestCityId);
-            display.innerText = `تم تحديد أقرب مدينة: ${saudiCitiesData[closestCityId].name}`;
-
-        }, () => {
-            display.innerText = "يرجى تفعيل GPS للسماح بالتحديد التلقائي";
-            alert("يرجى تفعيل الموقع (Location) من إعدادات المتصفح.");
-        });
+            document.getElementById('citySelect').value = closest;
+            updateByManualSelection(closest);
+        }, () => display.innerText = "يرجى تفعيل الموقع");
     }
 
     function startCountdown() {
@@ -167,14 +163,11 @@
                 if (d > now) { next = { ...p, d: d }; break; }
             }
             if (!next) { 
-                const [h, m] = pList.t.split(':');
-                const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(h, m, 0);
-                next = { ...pList, d: d };
+                const d = new Date(); d.setDate(d.getDate()+1); const [h,m] = pList[0].t.split(':'); d.setHours(h,m,0);
+                next = { ...pList[0], d: d };
             }
             const diff = next.d - now;
-            const hh = String(Math.floor(diff / 3600000)).padStart(2,'0');
-            const mm = String(Math.floor((diff % 3600000) / 60000)).padStart(2,'0');
-            const ss = String(Math.floor((diff % 60000) / 1000)).padStart(2,'0');
+            const hh = String(Math.floor(diff/3600000)).padStart(2,'0'), mm = String(Math.floor((diff%3600000)/60000)).padStart(2,'0'), ss = String(Math.floor((diff%60000)/1000)).padStart(2,'0');
             document.getElementById('next-p-name').innerText = next.n;
             document.getElementById('timer').innerText = `${hh}:${mm}:${ss}`;
         }, 1000);
@@ -191,7 +184,16 @@
         for (let i = 0; i < 35; i++) {
             const cell = document.createElement('div'); cell.className = 'day-cell';
             let d = new Date(temp); d.setDate(d.getDate() + (i - offset));
-            cell.innerText = new Intl.DateTimeFormat(isHijri ? 'en-u-ca-islamic-umalqura' : 'en-US', {day: 'numeric'}).format(d);
+            const hD = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {day:'numeric'}).format(d);
+            const hM = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {month:'numeric'}).format(d);
+            const mD = d.getDate(), mM = d.getMonth() + 1;
+
+            let icon = '', evName = '';
+            if (events.hijri[`${hM}/${hD}`]) { [evName, icon] = events.hijri[`${hM}/${hD}`]; icon = `<span class="event-icon">${icon}</span>`; }
+            else if (events.greg[`${mM}/${mD}`]) { [evName, icon] = events.greg[`${mM}/${mD}`]; icon = `<div class="saudi-flag"></div>`; }
+
+            cell.setAttribute('data-event', evName);
+            cell.innerHTML = `<span class="day-num">${isHijri ? hD : mD}</span>${icon}`;
             if (d.toDateString() === new Date().toDateString()) cell.classList.add('today');
             grid.appendChild(cell);
         }

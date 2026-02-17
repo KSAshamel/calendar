@@ -77,7 +77,9 @@
     let viewDate = new Date(), isHijri = true, prayerTimes = {};
 
     async function fetchPrayers(city, lat = null, lon = null) {
-        let url = lat && lon ? `https://api.aladhan.com{lat}&longitude=${lon}&method=4` : `https://api.aladhan.com{city}&country=SA&method=4`;
+        let url = (lat && lon) ? 
+            `https://api.aladhan.com{lat}&longitude=${lon}&method=4` : 
+            `https://api.aladhan.com{city}&country=SA&method=4`;
         try {
             const r = await fetch(url);
             const d = await r.json();
@@ -85,7 +87,7 @@
             if(!lat) document.getElementById('current-location-display').innerText = `المدينة الحالية: ${document.getElementById('citySelect').options[document.getElementById('citySelect').selectedIndex].text}`;
             else document.getElementById('current-location-display').innerText = "تم التحديد عبر موقعك الحالي";
             updatePrayerUI();
-        } catch(e) { console.error("Error"); }
+        } catch(e) { console.error("API Error"); }
     }
 
     function updatePrayerUI() {
@@ -128,8 +130,9 @@
         ['ح','ن','ث','ر','خ','ج','س'].forEach(d => grid.innerHTML += `<div class="day-name">${d}</div>`);
         let m = viewDate.getMonth(), y = viewDate.getFullYear();
         
-        let options = isHijri ? { calendar: 'islamic-uma', month: 'long', year: 'numeric' } : { month: 'long', year: 'numeric' };
-        document.getElementById('monthDisplay').innerText = viewDate.toLocaleString('ar-SA-u-ca-islamic-uma', options).replace(/[\u0660-\u0669]/g, c => c.charCodeAt(0) - 0x0660);
+        let locale = isHijri ? 'ar-SA-u-ca-islamic-uma' : 'ar-SA';
+        let options = { month: 'long', year: 'numeric' };
+        document.getElementById('monthDisplay').innerText = new Intl.DateTimeFormat(locale, options).format(viewDate);
 
         let firstDay = new Date(y, m, 1).getDay();
         let lastDay = new Date(y, m + 1, 0).getDate();
@@ -137,15 +140,22 @@
         for (let d = 1; d <= lastDay; d++) {
             let cur = new Date(y, m, d);
             let isT = new Date().toDateString() === cur.toDateString();
-            let displayNum = isHijri ? new Intl.DateTimeFormat('ar-SA-u-ca-islamic-uma', {day:'numeric'}).format(cur) : d;
+            let displayNum = d;
+            if (isHijri) {
+                displayNum = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-uma', { day: 'numeric' }).format(cur);
+            }
             grid.innerHTML += `<div class="day-cell ${isT ? 'today' : ''}"><span class="day-num">${displayNum}</span></div>`;
         }
     }
 
-    function toggleCalendarMode() { isHijri = !isHijri; document.getElementById('modeBtn').innerText = isHijri ? "التبديل للميلادي" : "التبديل للهجري"; renderCalendar(); }
+    function toggleCalendarMode() { 
+        isHijri = !isHijri; 
+        document.getElementById('modeBtn').innerText = isHijri ? "التبديل للميلادي" : "التبديل للهجري"; 
+        renderCalendar(); 
+    }
     function changeMonth(s) { viewDate.setMonth(viewDate.getMonth() + s); renderCalendar(); }
     function syncLocation() { if (navigator.geolocation) { navigator.geolocation.getCurrentPosition(p => fetchPrayers(null, p.coords.latitude, p.coords.longitude), () => fetchPrayers('Makkah')); } }
-    
+
     fetchPrayers('Makkah'); renderCalendar();
 </script>
 </body>

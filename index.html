@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تقويم أم القرى - النسخة المستقلة</title>
+    <title>تقويم أم القرى - النسخة الشاملة والمستقلة</title>
     <style>
         :root { --saudi-green: #006C35; --primary: #0078d4; --gold: #ffd700; --bg: #f4f7f6; --text: #222; --card-bg: #fff; --border: #ddd; }
         body.dark { --bg: #1a1a1a; --text: #eaeaea; --card-bg: #2a2a2a; --border: #444; }
@@ -16,7 +16,8 @@
         .p-n { display: block; font-size: 10px; color: #bbb; }
         .p-t { display: block; font-size: 12px; font-weight: bold; color: var(--gold); }
         .controls-area { padding: 15px; background: var(--card-bg); border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
-        .select-city { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); font-family: inherit; }
+        .select-city { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); font-family: inherit; font-size: 14px; }
+        .btn-gps { width: 100%; padding: 10px; background: var(--saudi-green); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; }
         .nav-btn { cursor: pointer; border: none; background: #f0f0f0; padding: 8px 14px; border-radius: 6px; }
         body.dark .nav-btn { background: #444; color: #fff; }
@@ -27,7 +28,7 @@
         .day-name { text-align: center; font-size: 11px; font-weight: bold; color: #999; padding-bottom: 10px; }
         .day-cell { height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 15px; }
         .day-cell.today { background: var(--primary); color: white; font-weight: bold; }
-        #status { font-size: 11px; text-align: center; color: var(--saudi-green); font-weight: bold; }
+        #status { font-size: 11px; text-align: center; color: var(--saudi-green); font-weight: bold; min-height: 15px; }
     </style>
 </head>
 <body>
@@ -45,19 +46,34 @@
     </div>
 
     <div class="controls-area">
-        <select class="select-city" id="citySelect" onchange="updatePrayers(this.value)">
-            <option value="Makkah">مكة المكرمة</option>
-            <option value="Riyadh">الرياض</option>
-            <option value="Medina">المدينة المنورة</option>
-            <option value="Jeddah">جدة</option>
-            <option value="Dammam">الدمام</option>
-            <option value="Abha">أبها</option>
-            <option value="Tabuk">تبوك</option>
-            <option value="Hail">حائل</option>
-            <option value="Buraidah">بريدة</option>
-            <option value="Jizan">جيزان</option>
+        <select class="select-city" id="citySelect" onchange="updateLocalPrayers(this.value)">
+            <optgroup label="المناطق الرئيسية">
+                <option value="Makkah">مكة المكرمة</option>
+                <option value="Riyadh">الرياض</option>
+                <option value="Medina">المدينة المنورة</option>
+                <option value="Jeddah">جدة</option>
+                <option value="Dammam">الدمام</option>
+            </optgroup>
+            <optgroup label="بقية المدن والمناطق">
+                <option value="Abha">أبها</option>
+                <option value="Tabuk">تبوك</option>
+                <option value="Buraidah">بريدة</option>
+                <option value="Hail">حائل</option>
+                <option value="Jizan">جيزان</option>
+                <option value="Najran">نجران</option>
+                <option value="Sakaka">سكاكا</option>
+                <option value="Arar">عرعر</option>
+                <option value="AlBahah">الباحة</option>
+                <option value="Taif">الطائف</option>
+                <option value="Yanbu">ينبع</option>
+                <option value="AlJubail">الجبيل</option>
+                <option value="AlKhobar">الخبر</option>
+                <option value="KhamisMushait">خميس مشيط</option>
+                <option value="AlQatif">القطيف</option>
+            </optgroup>
         </select>
-        <div id="status">الوضع المحلي (يعمل بدون إنترنت)</div>
+        <button class="btn-gps" onclick="getLocation()">📍 مزامنة دقيقة عبر موقعي الحالي</button>
+        <div id="status">الوضع المحلي مفعّل (بدون اتصال)</div>
     </div>
 
     <div class="switch-mode">
@@ -76,7 +92,7 @@
 <script>
     let viewDate = new Date(), isHijri = true, countdownInterval;
 
-    // قاعدة بيانات محلية ثابتة للمدن الرئيسية (أوقات تقريبية)
+    // قاعدة بيانات مدمجة لضمان العمل بدون إنترنت
     const saudiCitiesData = {
         Makkah: { Fajr: "05:18", Dhuhr: "12:28", Asr: "15:48", Maghrib: "18:22", Isha: "19:52" },
         Riyadh: { Fajr: "04:55", Dhuhr: "12:05", Asr: "15:25", Maghrib: "17:58", Isha: "19:28" },
@@ -85,19 +101,60 @@
         Dammam: { Fajr: "04:42", Dhuhr: "11:53", Asr: "15:12", Maghrib: "17:46", Isha: "19:16" },
         Abha: { Fajr: "05:12", Dhuhr: "12:22", Asr: "15:42", Maghrib: "18:15", Isha: "19:45" },
         Tabuk: { Fajr: "05:45", Dhuhr: "12:45", Asr: "16:10", Maghrib: "18:45", Isha: "20:15" },
-        Hail: { Fajr: "05:28", Dhuhr: "12:32", Asr: "15:55", Maghrib: "18:22", Isha: "19:52" },
-        Buraidah: { Fajr: "05:15", Dhuhr: "12:21", Asr: "15:45", Maghrib: "18:12", Isha: "19:42" },
-        Jizan: { Fajr: "05:10", Dhuhr: "12:18", Asr: "15:38", Maghrib: "18:05", Isha: "19:35" }
+        Hail: { Fajr: "05:18", Dhuhr: "12:22", Asr: "15:48", Maghrib: "18:15", Isha: "19:45" },
+        Buraidah: { Fajr: "05:08", Dhuhr: "12:15", Asr: "15:38", Maghrib: "18:08", Isha: "19:38" },
+        Jizan: { Fajr: "05:15", Dhuhr: "12:25", Asr: "15:45", Maghrib: "18:18", Isha: "19:48" },
+        Najran: { Fajr: "05:05", Dhuhr: "12:15", Asr: "15:35", Maghrib: "18:08", Isha: "19:38" },
+        Sakaka: { Fajr: "05:35", Dhuhr: "12:38", Asr: "16:02", Maghrib: "18:35", Isha: "20:05" },
+        Arar: { Fajr: "05:28", Dhuhr: "12:32", Asr: "15:55", Maghrib: "18:28", Isha: "19:58" },
+        AlBahah: { Fajr: "05:15", Dhuhr: "12:25", Asr: "15:45", Maghrib: "18:18", Isha: "19:48" },
+        Taif: { Fajr: "05:16", Dhuhr: "12:26", Asr: "15:46", Maghrib: "18:20", Isha: "19:50" },
+        Yanbu: { Fajr: "05:35", Dhuhr: "12:38", Asr: "16:02", Maghrib: "18:35", Isha: "20:05" },
+        AlJubail: { Fajr: "04:45", Dhuhr: "11:55", Asr: "15:15", Maghrib: "17:48", Isha: "19:18" },
+        AlKhobar: { Fajr: "04:42", Dhuhr: "11:53", Asr: "15:12", Maghrib: "17:46", Isha: "19:16" },
+        KhamisMushait: { Fajr: "05:12", Dhuhr: "12:22", Asr: "15:42", Maghrib: "18:15", Isha: "19:45" },
+        AlQatif: { Fajr: "04:43", Dhuhr: "11:54", Asr: "15:13", Maghrib: "17:47", Isha: "19:17" }
     };
 
     let currentPrayerTimes = saudiCitiesData.Makkah;
 
-    function updatePrayers(city) {
+    // تحديث من القائمة المحلية (بدون إنترنت)
+    function updateLocalPrayers(city) {
+        document.getElementById('status').innerText = "الوضع المحلي مفعّل (بدون اتصال)";
         currentPrayerTimes = saudiCitiesData[city];
+        applyTimes();
+    }
+
+    // تطبيق الأوقات على الواجهة
+    function applyTimes() {
         ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].forEach(p => {
             document.getElementById(p).innerText = currentPrayerTimes[p];
         });
         startCountdown();
+    }
+
+    // جلب المواقيت عبر GPS (يحتاج إنترنت)
+    function getLocation() {
+        const status = document.getElementById('status');
+        if (navigator.geolocation) {
+            status.innerText = "جاري البحث عن موقعك...";
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const url = `https://api.aladhan.com{pos.coords.latitude}&longitude=${pos.coords.longitude}&method=4`;
+                try {
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    if (data && data.data) {
+                        currentPrayerTimes = data.data.timings;
+                        applyTimes();
+                        status.innerText = "تمت المزامنة بنجاح ✅";
+                    }
+                } catch (e) {
+                    status.innerText = "⚠️ فشل الاتصال. تم البقاء على الوضع المحلي.";
+                }
+            }, () => {
+                status.innerText = "⚠️ لم يتم السماح بالوصول للموقع.";
+            });
+        }
     }
 
     function startCountdown() {
@@ -146,7 +203,7 @@
     function toggleDark() { document.body.classList.toggle('dark'); }
     function changeMonth(n) { if (isHijri) viewDate.setDate(viewDate.getDate() + (n * 30)); else viewDate.setMonth(viewDate.getMonth() + n); render(); }
 
-    window.onload = () => { render(); updatePrayers('Makkah'); };
+    window.onload = () => { render(); updateLocalPrayers('Makkah'); };
 </script>
 </body>
 </html>

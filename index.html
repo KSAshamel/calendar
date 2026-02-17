@@ -34,7 +34,7 @@
         .btn-shamel { display: inline-block; width: 85%; padding: 12px 0; background: #2c2c2c; color: #fff !important; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; border: 2px solid #39ff14; }
     </style>
 </head>
-<body class="dark"> <!-- الوضع الليلي هو الافتراضي -->
+<body class="dark">
 <div class="calendar-card">
     <div class="prayer-header">
         <div id="countdown">باقي على أذان <span id="next-p-name">--</span> <span id="timer">00:00:00</span></div>
@@ -54,10 +54,7 @@
             <option value="Tabuk">تبوك</option><option value="Hail">حائل</option>
             <option value="Buraidah">بريدة</option><option value="Jizan">جيزان</option>
             <option value="Najran">نجران</option><option value="Sakaka">سكاكا</option>
-            <option value="Arar">عرعر</option><option value="Taif">الطائف</option>
-            <option value="Al-Khobar">الخبر</option><option value="Yanbu">ينبع</option>
-            <option value="Hofuf">الهفوف</option><option value="Jubail">الجبيل</option>
-            <option value="Khafji">الخفجي</option><option value="Qurayyat">القريات</option>
+            <option value="Arar">عرعر</option>
         </select>
         <button class="btn-gps" onclick="syncLocation()">📍 تحديد أقرب مدينة تلقائياً</button>
         <div id="current-location-display">المدينة الحالية: مكة المكرمة</div>
@@ -77,8 +74,9 @@
 <script>
     let viewDate = new Date(), isHijri = true, prayerTimes = {};
     async function fetchPrayers(city, lat = null, lon = null) {
-        let url = `https://api.aladhan.com{city}&country=SA&method=4`;
-        if (lat && lon) url = `https://api.aladhan.com{lat}&longitude=${lon}&method=4`;
+        let url = lat && lon ? 
+            `https://api.aladhan.com{lat}&longitude=${lon}&method=4` :
+            `https://api.aladhan.com{city}&country=SA&method=4`;
         try {
             const r = await fetch(url);
             const d = await r.json();
@@ -86,7 +84,7 @@
             if(!lat) document.getElementById('current-location-display').innerText = `المدينة الحالية: ${document.getElementById('citySelect').options[document.getElementById('citySelect').selectedIndex].text}`;
             else document.getElementById('current-location-display').innerText = "تم التحديد عبر موقعك الحالي";
             updatePrayerUI();
-        } catch(e) { console.error("Error"); }
+        } catch(e) { console.error("API Error"); }
     }
     function updatePrayerUI() {
         ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].forEach(p => {
@@ -105,12 +103,12 @@
             let next = null;
             for (let p of list) {
                 let [h, m] = prayerTimes[p].split(':');
-                let d = new Date(); d.setHours(h, m, 0);
+                let d = new Date(); d.setHours(parseInt(h), parseInt(m), 0);
                 if (d > now) { next = { n: p, t: d }; break; }
             }
             if(!next) {
                 let [h, m] = prayerTimes['Fajr'].split(':');
-                let d = new Date(); d.setDate(d.getDate() + 1); d.setHours(h, m, 0);
+                let d = new Date(); d.setDate(d.getDate() + 1); d.setHours(parseInt(h), parseInt(m), 0);
                 next = { n: 'Fajr', t: d };
             }
             let diff = next.t - now;

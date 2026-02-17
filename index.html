@@ -85,7 +85,7 @@
     <div class="grid" id="calendarGrid"></div>
 
     <div class="shamel-footer">
-        <a href="https://ksashamel.github.io/shamel/" target="_blank" class="btn-shamel">شامل</a>
+        <a href="https://ksashamel.github.io" target="_blank" class="btn-shamel">شامل</a>
     </div>
 
 </div>
@@ -210,22 +210,27 @@ function renderCalendar() {
 
     let m = viewDate.getMonth(), y = viewDate.getFullYear();
 
-    let locale = isHijri ? 'ar-SA-u-ca-islamic-umalqura' : 'ar-SA';
+    // مهيئ اسم الشهر (هجري أو ميلادي) مع تحديد نوع التقويم صراحةً
+    let monthFormatter = isHijri
+        ? new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', { month: 'long', year: 'numeric' })
+        : new Intl.DateTimeFormat('ar-SA-u-ca-gregory', { month: 'long', year: 'numeric' });
 
-    document.getElementById('monthDisplay').innerText =
-        new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(viewDate);
+    document.getElementById('monthDisplay').innerText = monthFormatter.format(viewDate);
 
     let firstDay = new Date(y, m, 1).getDay();
     let lastDay = new Date(y, m + 1, 0).getDate();
 
     for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div></div>`;
 
+    // مهيئ رقم اليوم الهجري فقط
+    let hijriDayFormatter = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', { day: 'numeric' });
+
     for (let d = 1; d <= lastDay; d++) {
         let cur = new Date(y, m, d);
         let isT = new Date().toDateString() === cur.toDateString();
 
         let displayNum = isHijri
-            ? new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', { day: 'numeric' }).format(cur)
+            ? hijriDayFormatter.format(cur)
             : d;
 
         grid.innerHTML += `<div class="day-cell ${isT ? 'today' : ''}">
@@ -275,6 +280,12 @@ function syncLocation() {
                 }
             }
 
+            if (found) {
+                // حفظ المدينة المختارة لاستخدامها مستقبلاً
+                localStorage.setItem('savedCityValue', select.value);
+                localStorage.setItem('savedCityLabel', select.options[select.selectedIndex].text);
+            }
+
             fetchPrayers(found ? select.value : "Makkah", lat, lon);
 
         }, err => {
@@ -284,7 +295,32 @@ function syncLocation() {
     }
 }
 
-fetchPrayers('Makkah');
+// استرجاع المدينة المحفوظة إن وجدت
+(function initCity() {
+    const savedValue = localStorage.getItem('savedCityValue');
+    const savedLabel = localStorage.getItem('savedCityLabel');
+
+    if (savedValue && savedLabel) {
+        const select = document.getElementById('citySelect');
+        let matched = false;
+        for (let i = 0; i < select.options.length; i++) {
+            if (select.options[i].value === savedValue) {
+                select.selectedIndex = i;
+                matched = true;
+                break;
+            }
+        }
+        if (matched) {
+            document.getElementById('current-location-display').innerText = `المدينة الحالية: ${savedLabel}`;
+            fetchPrayers(savedValue);
+        } else {
+            fetchPrayers('Makkah');
+        }
+    } else {
+        fetchPrayers('Makkah');
+    }
+})();
+
 renderCalendar();
 
 </script>

@@ -16,7 +16,7 @@
         .prayer-item { background: rgba(255,255,255,0.08); padding: 8px 2px; border-radius: 6px; text-align: center; border: 1px solid transparent; }
         .prayer-item.active { border-color: var(--saudi-green); background: rgba(0, 108, 53, 0.3); }
         .p-n { display: block; font-size: 10px; color: #bbb; }
-        .p-t { display: block; font-size: 11px; font-weight: bold; color: var(--gold); }
+        .p-t { display: block; font-size: 10px; font-weight: bold; color: var(--gold); }
         .controls-area { padding: 10px; background: var(--card-bg); border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
         .select-city, .btn-gps { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 14px; cursor: pointer; background: var(--card-bg); color: var(--text); }
         .btn-gps { background: var(--saudi-green); color: white; border: none; font-weight: bold; }
@@ -29,10 +29,10 @@
         .day-name { text-align: center; font-size: 11px; font-weight: bold; color: #999; padding-bottom: 10px; }
         .day-cell { height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 15px; cursor: pointer; position: relative; }
         .day-cell.today { background: var(--primary); color: white; font-weight: bold; }
-        .event-dot { width: 5px; height: 5px; background: var(--gold); border-radius: 50%; margin-top: 2px; position: absolute; bottom: 2px; }
-        .saudi-flag { width: 12px; height: 8px; background: var(--saudi-green); border: 1px solid white; margin-top: 2px; position: absolute; bottom: 2px; }
+        .event-dot { width: 5px; height: 5px; background: var(--gold); border-radius: 50%; position: absolute; bottom: 2px; }
+        .saudi-flag { width: 12px; height: 8px; background: var(--saudi-green); border: 1px solid white; position: absolute; bottom: 2px; }
         .shamel-footer { padding: 20px 10px; text-align: center; border-top: 1px solid var(--border); }
-        .btn-shamel { display: inline-block; width: 85%; padding: 14px 0; background: #2c2c2c; color: #fff !important; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; border: 2px solid var(--neon-green); box-shadow: 0 0 10px rgba(57, 255, 20, 0.4); transition: 0.3s; }
+        .btn-shamel { display: inline-block; width: 85%; padding: 14px 0; background: #2c2c2c; color: #fff !important; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; border: 2px solid var(--neon-green); box-shadow: 0 0 10px rgba(57, 255, 20, 0.4); }
         .event-popup { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(34, 34, 34, 0.95); color: #fff; padding: 15px; border-radius: 10px; font-size: 14px; z-index: 100; display: none; text-align: center; border: 1px solid var(--gold); box-shadow: 0 0 20px rgba(0,0,0,0.5); backdrop-filter: blur(5px); }
     </style>
 </head>
@@ -78,25 +78,33 @@
         <button class="toggle-btn" onclick="changeMonth(1)">❯</button>
     </div>
     <div class="grid" id="calendarGrid"></div>
-    <div class="shamel-footer">
-        <a href="https://ksashamel.github.io/shamel/" target="_blank" class="btn-shamel">شامل</a>
-    </div>
+    <div class="shamel-footer"><a href="https://ksashamel.github.io" target="_blank" class="btn-shamel">شامل</a></div>
 </div>
 
 <script>
     let viewDate = new Date(), isHijri = true, prayerTimes = {Fajr:"05:30", Dhuhr:"12:30", Asr:"15:45", Maghrib:"18:15", Isha:"19:45"};
     const coords = { Makkah:[21.42, 39.82], Riyadh:[24.71, 46.67], Medina:[24.46, 39.60], Jeddah:[21.54, 39.17], Dammam:[26.42, 50.08], Abha:[18.21, 42.50], Tabuk:[28.38, 36.56], Buraidah:[26.32, 43.97], Hail:[27.52, 41.69], Jizan:[16.88, 42.55], Najran:[17.49, 44.12], Sakaka:[29.96, 40.20], Arar:[30.97, 41.03] };
-    const holyEvents = { hijri: { '9-1': 'بداية شهر رمضان المبارك 🌙', '10-1': 'عيد الفطر المبارك 🎇', '12-9': 'يوم عرفة 🕋', '12-10': 'عيد الأضحى المبارك 🐏' }, greg: { '9-23': 'اليوم الوطني السعودي 🇸🇦', '2-22': 'يوم التأسيس السعودي 🇸🇦', '3-11': 'يوم العلم السعودي 🇸🇦' } };
+    const holyEvents = { hijri: { '9-1': 'بداية شهر رمضان 🌙', '10-1': 'عيد الفطر المبارك 🎇', '12-9': 'يوم عرفة 🕋', '12-10': 'عيد الأضحى 🐏' }, greg: { '9-23': 'اليوم الوطني 🇸🇦', '2-22': 'يوم التأسيس 🇸🇦', '3-11': 'يوم العلم 🇸🇦' } };
     const pNames = {Fajr:'الفجر',Dhuhr:'الظهر',Asr:'العصر',Maghrib:'المغرب',Isha:'العشاء'};
 
+    function format12h(timeStr) {
+        if(!timeStr) return "--:--";
+        let [h, m] = timeStr.split(':').map(Number);
+        const ampm = h >= 12 ? 'م' : 'ص';
+        h = h % 12 || 12;
+        return `${h}:${String(m).padStart(2, '0')} ${ampm}`;
+    }
+
     async function updatePrayers(city, lat, lon) {
-        let tLat = lat || coords[city], tLon = lon || coords[city];
+        let tLat = lat || coords[city][0], tLon = lon || coords[city][1];
         try {
             const r = await fetch(`https://api.aladhan.com{tLat}&longitude=${tLon}&method=4`);
             const d = await r.json();
             if(d.data) {
                 prayerTimes = d.data.timings;
-                ['Fajr','Dhuhr','Asr','Maghrib','Isha'].forEach(p => document.getElementById('val-'+p).innerText = prayerTimes[p]);
+                ['Fajr','Dhuhr','Asr','Maghrib','Isha'].forEach(p => {
+                    document.getElementById('val-'+p).innerText = format12h(prayerTimes[p]);
+                });
             }
         } catch(e) { console.error("API error"); }
         startCountdown();
@@ -107,7 +115,7 @@
             navigator.geolocation.getCurrentPosition(p => {
                 let nearest = 'Makkah', minD = Infinity;
                 for(let c in coords) {
-                    let d = Math.sqrt(Math.pow(p.coords.latitude-coords[c],2)+Math.pow(p.coords.longitude-coords[c],2));
+                    let d = Math.sqrt(Math.pow(p.coords.latitude-coords[c][0],2)+Math.pow(p.coords.longitude-coords[c][1],2));
                     if(d < minD) { minD = d; nearest = c; }
                 }
                 document.getElementById('citySelect').value = nearest;
@@ -121,14 +129,12 @@
         window.pT = setInterval(() => {
             const now = new Date(), list = ['Fajr','Dhuhr','Asr','Maghrib','Isha'];
             let lastP = null, nextP = null;
-
             for(let i=0; i<list.length; i++) {
                 const [h,m] = prayerTimes[list[i]].split(':');
                 const d = new Date(); d.setHours(h, m, 0);
                 if(d < now) lastP = {n:list[i], t:d};
                 if(d > now && !nextP) nextP = {n:list[i], t:d};
             }
-
             if(!lastP) { 
                 const [h,m] = prayerTimes['Isha'].split(':');
                 const d = new Date(); d.setDate(d.getDate()-1); d.setHours(h,m,0);
@@ -139,25 +145,19 @@
                 const d = new Date(); d.setDate(d.getDate()+1); d.setHours(h,m,0);
                 nextP = {n:'Fajr', t:d};
             }
-
-            const diffLast = now - lastP.t;
-            const limit26Min = 26 * 60 * 1000;
-            let displayLabel, diff;
-
-            if (diffLast <= limit26Min) {
-                displayLabel = `مضى على أذان ${pNames[lastP.n]}`;
-                diff = diffLast;
-                document.querySelectorAll('.prayer-item').forEach(i => i.classList.remove('active'));
-                document.getElementById('item-'+lastP.n).classList.add('active');
+            const diffLast = now - lastP.t, limit26 = 26 * 60 * 1000;
+            let label, diff, targetId;
+            if (diffLast <= limit26) {
+                label = `مضى على أذان ${pNames[lastP.n]}`;
+                diff = diffLast; targetId = lastP.n;
             } else {
-                displayLabel = `باقي على أذان ${pNames[nextP.n]}`;
-                diff = nextP.t - now;
-                document.querySelectorAll('.prayer-item').forEach(i => i.classList.remove('active'));
-                document.getElementById('item-'+nextP.n).classList.add('active');
+                label = `باقي على أذان ${pNames[nextP.n]}`;
+                diff = nextP.t - now; targetId = nextP.n;
             }
-
+            document.querySelectorAll('.prayer-item').forEach(i => i.classList.remove('active'));
+            document.getElementById('item-'+targetId).classList.add('active');
             const hh = Math.floor(diff/3600000), mm = Math.floor((diff%3600000)/60000), ss = Math.floor((diff%60000)/1000);
-            document.getElementById('timer-label').innerText = displayLabel;
+            document.getElementById('timer-label').innerText = label;
             document.getElementById('timer').innerText = `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
         }, 1000);
     }

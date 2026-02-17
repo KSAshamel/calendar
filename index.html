@@ -10,64 +10,35 @@
             --bg: #f4f7f6; --text: #222; --card-bg: #fff; --border: #ddd; 
             --neon-green: #39ff14; 
         }
-        /* الوضع الليلي كوضع افتراضي */
         body.dark { --bg: #1a1a1a; --text: #eaeaea; --card-bg: #2a2a2a; --border: #444; }
-        
-        body { 
-            font-family: 'Segoe UI', Tahoma, sans-serif; 
-            background: var(--bg); color: var(--text); 
-            display: flex; justify-content: center; 
-            padding: 10px; margin: 0; transition: 0.3s; 
-        }
-        
-        .calendar-card { 
-            background: var(--card-bg); width: 100%; max-width: 400px; 
-            border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
-            overflow: hidden; border: 1px solid var(--border); display: flex; flex-direction: column; 
-        }
-        
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 10px; margin: 0; transition: 0.3s; }
+        .calendar-card { background: var(--card-bg); width: 100%; max-width: 400px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid var(--border); display: flex; flex-direction: column; }
         .prayer-header { background: #111; color: #fff; padding: 12px; text-align: center; border-bottom: 3px solid var(--saudi-green); }
         .prayer-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 8px; }
         .prayer-item { background: rgba(255,255,255,0.08); padding: 5px 2px; border-radius: 6px; }
         .p-n { display: block; font-size: 10px; color: #bbb; }
         .p-t { display: block; font-size: 11px; font-weight: bold; color: var(--gold); }
-
         .controls-area { padding: 10px; background: var(--card-bg); border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
         .select-city { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); font-size: 14px; }
         .btn-gps { width: 100%; padding: 10px; background: var(--saudi-green); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; }
-
         .switch-mode { display: flex; justify-content: center; padding: 8px; gap: 10px; }
         .toggle-btn { cursor: pointer; padding: 6px 15px; background: #eee; border: 1px solid var(--border); border-radius: 20px; font-size: 12px; color: #333; }
         body.dark .toggle-btn { background: #444; color: #fff; }
-
         .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; }
         .month-label { font-weight: bold; font-size: 15px; color: var(--saudi-green); }
         body.dark .month-label { color: var(--gold); }
-
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); padding: 5px 10px; }
         .day-name { text-align: center; font-size: 11px; font-weight: bold; color: #999; padding-bottom: 10px; }
         .day-cell { height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; font-size: 15px; position: relative; cursor: pointer; }
         .day-cell.today { background: var(--primary); color: white; font-weight: bold; }
-
-        /* التلميح عند اللمس */
-        .day-cell[data-event]:hover::after {
-            content: attr(data-event); position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%);
-            background: #333; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 10px; white-space: nowrap; z-index: 100;
-        }
-
+        .day-cell[data-event]:hover::after { content: attr(data-event); position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 10px; white-space: nowrap; z-index: 100; }
         .shamel-footer { padding: 15px; text-align: center; border-top: 1px solid var(--border); }
-        .btn-shamel { 
-            display: inline-block; width: 85%; padding: 12px 0; 
-            background: #2c2c2c; color: #ffffff; 
-            text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px;
-            border: 2px solid var(--neon-green); 
-            box-shadow: 0 0 10px rgba(57, 255, 20, 0.4); transition: 0.3s;
-        }
+        .btn-shamel { display: inline-block; width: 85%; padding: 12px 0; background: #2c2c2c; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; border: 2px solid var(--neon-green); box-shadow: 0 0 10px rgba(57, 255, 20, 0.4); transition: 0.3s; }
         .btn-shamel:hover { background: #1a1a1a; box-shadow: 0 0 20px rgba(57, 255, 20, 0.7); }
         .saudi-flag { width: 15px; height: 9px; background: var(--saudi-green); border: 1px solid white; margin-top: 2px; }
     </style>
 </head>
-<body class="dark"> <!-- البدء بالوضع الليلي -->
+<body class="dark">
 
 <div class="calendar-card">
     <div class="prayer-header">
@@ -93,17 +64,16 @@
             <option value="Tabuk">تبوك</option>
         </select>
         <button class="btn-gps" onclick="syncLocation()">📍 تحديد أقرب مدينة تلقائياً</button>
-        
         <div class="switch-mode">
             <button class="toggle-btn" id="themeBtn" onclick="toggleTheme()">☀️ الوضع النهاري</button>
-            <button class="toggle-btn" onclick="toggleCalendarMode()">تبديل (هجري/ميلادي)</button>
+            <button class="toggle-btn" id="calBtn" onclick="toggleCalendarMode()">التبديل للميلادي</button>
         </div>
     </div>
 
     <div class="header">
-        <button onclick="changeMonth(-1)" style="cursor:pointer; border:none; padding:5px 10px; border-radius:5px;">❮</button>
+        <button onclick="changeMonth(-1)" class="toggle-btn">❮</button>
         <div class="month-label" id="monthDisplay">--</div>
-        <button onclick="changeMonth(1)" style="cursor:pointer; border:none; padding:5px 10px; border-radius:5px;">❯</button>
+        <button onclick="changeMonth(1)" class="toggle-btn">❯</button>
     </div>
 
     <div class="grid" id="calendarGrid"></div>
@@ -117,75 +87,69 @@
     let viewDate = new Date();
     let isHijri = true;
 
-    // تبديل الثيم وتغيير اسم الزر
     function toggleTheme() {
         const body = document.body;
         const btn = document.getElementById('themeBtn');
         body.classList.toggle('dark');
-        
-        if (body.classList.contains('dark')) {
-            btn.innerText = "☀️ الوضع النهاري";
-        } else {
-            btn.innerText = "🌙 الوضع الليلي";
-        }
+        btn.innerText = body.classList.contains('dark') ? "☀️ الوضع النهاري" : "🌙 الوضع الليلي";
     }
 
-    // جلب مواقيت الصلاة من API بمعيار أم القرى
     async function fetchPrayerTimes(city) {
-        const status = document.getElementById('status');
+        document.getElementById('status').innerText = "جارٍ التحميل...";
         try {
-            const response = await fetch(`https://api.aladhan.com{city},Saudi Arabia&method=4`);
-            const data = await response.json();
-            const timings = data.data.timings;
-
-            const formatTime = (t) => {
-                let [h, m] = t.split(':');
-                let suffix = h >= 12 ? 'م' : 'ص';
+            const res = await fetch(`https://api.aladhan.com{city},SA&method=4`);
+            const json = await res.json();
+            const t = json.data.timings;
+            const fmt = (time) => {
+                let [h, m] = time.split(':');
+                let s = h >= 12 ? 'م' : 'ص';
                 h = h % 12 || 12;
-                return `${String(h).padStart(2, '0')}:${m} ${suffix}`;
+                return `${h}:${m} ${s}`;
             };
-
-            document.getElementById('Fajr').innerText = formatTime(timings.Fajr);
-            document.getElementById('Dhuhr').innerText = formatTime(timings.Dhuhr);
-            document.getElementById('Asr').innerText = formatTime(timings.Asr);
-            document.getElementById('Maghrib').innerText = formatTime(timings.Maghrib);
-            document.getElementById('Isha').innerText = formatTime(timings.Isha);
+            document.getElementById('Fajr').innerText = fmt(t.Fajr);
+            document.getElementById('Dhuhr').innerText = fmt(t.Dhuhr);
+            document.getElementById('Asr').innerText = fmt(t.Asr);
+            document.getElementById('Maghrib').innerText = fmt(t.Maghrib);
+            document.getElementById('Isha').innerText = fmt(t.Isha);
+            document.getElementById('status').innerText = "تقويم أم القرى الرسمي";
         } catch (e) {
-            status.innerText = "خطأ في جلب المواقيت";
+            document.getElementById('status').innerText = "خطأ في الاتصال";
         }
     }
 
-    function toggleCalendarMode() { isHijri = !isHijri; renderCalendar(); }
+    function toggleCalendarMode() { 
+        isHijri = !isHijri; 
+        document.getElementById('calBtn').innerText = isHijri ? "التبديل للميلادي" : "التبديل للهجري";
+        renderCalendar(); 
+    }
     function changeMonth(s) { viewDate.setMonth(viewDate.getMonth() + s); renderCalendar(); }
 
     function renderCalendar() {
         const grid = document.getElementById('calendarGrid');
         grid.innerHTML = '';
-        const calMode = isHijri ? 'islamic-umalqura' : 'gregory';
-        const monthLabel = new Intl.DateTimeFormat('ar-SA-u-ca-' + calMode, {month:'long', year:'numeric'}).format(viewDate);
-        document.getElementById('monthDisplay').innerText = monthLabel;
+        const cal = isHijri ? 'ar-SA-u-ca-islamic-umalqura' : 'ar-SA';
+        const label = new Intl.DateTimeFormat(cal, {month:'long', year:'numeric'}).format(viewDate);
+        document.getElementById('monthDisplay').innerText = label;
 
         ['ح','ن','ث','ر','خ','ج','س'].forEach(d => grid.innerHTML += `<div class="day-name">${d}</div>`);
 
+        const firstDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay();
+        for(let i=0; i<firstDay; i++) grid.innerHTML += `<div></div>`;
+
+        const daysInMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
         const now = new Date();
-        // عرض 30 يوم بشكل مبسط
-        for(let i=1; i<=30; i++) {
-            let ev = "";
-            if(!isHijri && i==22 && viewDate.getMonth()==1) ev = "يوم التأسيس 🇸🇦";
-            let isToday = (viewDate.getMonth() === now.getMonth() && i === now.getDate() && viewDate.getFullYear() === now.getFullYear());
-            grid.innerHTML += `<div class="day-cell ${isToday?'today':''}" data-event="${ev}">${i}${ev?'<div class="saudi-flag"></div>':''}</div>`;
+        for(let i=1; i<=daysInMonth; i++) {
+            const isToday = now.getDate() === i && now.getMonth() === viewDate.getMonth() && now.getFullYear() === viewDate.getFullYear();
+            grid.innerHTML += `<div class="day-cell ${isToday?'today':''}">${i}</div>`;
         }
     }
 
     function syncLocation() {
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(pos => {
-                fetchPrayerTimes("Makkah"); // كافتراضي عند النجاح أو يمكن تطويرها لإحداثيات أدق
-            });
+            navigator.geolocation.getCurrentPosition(pos => fetchPrayerTimes('Makkah'), () => fetchPrayerTimes('Makkah'));
         }
     }
 
-    // التشغيل الأولي
     renderCalendar();
     fetchPrayerTimes('Makkah');
 </script>

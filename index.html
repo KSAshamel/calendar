@@ -11,7 +11,6 @@
         
         .calendar-card { background: var(--card-bg); width: 100%; max-width: 420px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid var(--border); display: flex; flex-direction: column; }
         
-        /* قسم الأذان العلوي */
         .prayer-header { background: #222; color: #fff; padding: 15px; text-align: center; border-bottom: 3px solid var(--saudi-green); }
         #timer { color: var(--gold); font-weight: bold; font-family: monospace; font-size: 17px; }
         .prayer-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 10px; }
@@ -37,11 +36,27 @@
         .day-cell { height: 65px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; font-size: 15px; position: relative; }
         .day-cell.today { background: var(--primary); color: white; font-weight: bold; }
         
-        /* زر شامل الجديد */
-        .shamel-footer { padding: 15px; background: #fff; border-top: 1px solid var(--border); text-align: center; }
-        body.dark .shamel-footer { background: #2a2a2a; }
-        .btn-shamel { display: inline-block; width: 90%; padding: 12px; background: var(--primary); color: white; text-decoration: none; border-radius: 8px; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 10px rgba(0, 120, 212, 0.2); }
-        .btn-shamel:hover { background: #005a9e; transform: translateY(-2px); }
+        /* زر شامل المحدث (بنفس نمط الصورة) */
+        .shamel-footer { padding: 20px 15px; background: var(--card-bg); border-top: 1px solid var(--border); text-align: center; }
+        .btn-shamel { 
+            display: inline-block; 
+            width: 90%; 
+            padding: 20px 0; 
+            background: #0f0f0f; /* لون أسود داكن */
+            color: #ffffff; 
+            text-decoration: none; 
+            border-radius: 12px; 
+            font-weight: 500; 
+            font-size: 16px;
+            border: 1px solid #333; /* إطار خفيف */
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        .btn-shamel:hover { 
+            background: #1a1a1a; 
+            transform: translateY(-2px);
+            border-color: #555;
+        }
 
         .event-icon { font-size: 12px; margin-top: 4px; }
         .saudi-flag { width: 18px; height: 12px; background: var(--saudi-green); border-radius: 2px; margin-top: 4px; border: 1px solid white; }
@@ -88,9 +103,9 @@
 
     <div class="grid" id="calendarGrid"></div>
 
-    <!-- زر شامل في الأسفل -->
+    <!-- زر شامل المنسق حسب الصورة -->
     <div class="shamel-footer">
-        <a href="https://ksashamel.github.io/shamel/" class="btn-shamel">شامل</a>
+        <a href="https://ksashamel.github.io/shamel/" target="_blank" class="btn-shamel">شامل</a>
     </div>
 </div>
 
@@ -151,8 +166,8 @@
                 if (d > now) { next = { ...p, d: d }; break; }
             }
             if (!next) { 
-                const d = new Date(); d.setDate(d.getDate()+1); const [h,m] = pList[0].t.split(':'); d.setHours(h,m,0);
-                next = { ...pList[0], d: d };
+                const d = new Date(); d.setDate(d.getDate()+1); const [h,m] = pList.t.split(':'); d.setHours(h,m,0);
+                next = { ...pList, d: d };
             }
             const diff = next.d - now;
             const hh = String(Math.floor(diff/3600000)).padStart(2,'0'), mm = String(Math.floor((diff%3600000)/60000)).padStart(2,'0'), ss = String(Math.floor((diff%60000)/1000)).padStart(2,'0');

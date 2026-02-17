@@ -75,7 +75,7 @@
     </div>
     <div class="grid" id="calendarGrid"></div>
     <div class="shamel-footer">
-        <a href="https://ksashamel.github.io/shamel/" target="_blank" class="btn-shamel">شامل</a>
+        <a href="https://ksashamel.github.io" target="_blank" class="btn-shamel">شامل</a>
     </div>
 </div>
 
@@ -114,21 +114,22 @@
 
     function changeMonth(step) {
         if (isHijri) {
-            let temp = new Date(viewDate.getFullYear(), viewDate.getMonth(), 15);
-            temp.setMonth(temp.getMonth() + step);
-            viewDate = temp;
+            viewDate.setDate(15);
+            viewDate.setMonth(viewDate.getMonth() + step);
         } else {
             viewDate.setMonth(viewDate.getMonth() + step);
         }
         renderCalendar();
     }
 
-    function getHParts(date) {
-        const fmt = new Intl.DateTimeFormat('en-u-ca-islamic-uma-nu-latn', {day:'numeric', month:'numeric', year:'numeric'});
-        const p = fmt.formatToParts(date);
-        const res = {};
-        p.forEach(x => res[x.type] = x.value);
-        return { day: parseInt(res.day), month: parseInt(res.month) };
+    // دالة لاستخراج اليوم الهجري فقط كرقم
+    function getHDay(date) {
+        return new Intl.DateTimeFormat('en-u-ca-islamic-uma-nu-latn', {day:'numeric'}).format(date);
+    }
+
+    // دالة لاستخراج الشهر الهجري فقط كرقم
+    function getHMonth(date) {
+        return new Intl.DateTimeFormat('en-u-ca-islamic-uma-nu-latn', {month:'numeric'}).format(date);
     }
 
     function renderCalendar() {
@@ -139,14 +140,21 @@
 
         if (isHijri) {
             monthLabel.innerText = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-uma', {month:'long', year:'numeric'}).format(viewDate);
+            
+            // العودة باليوم حتى نصل لأول يوم في الشهر الهجري الحالي
             let runner = new Date(viewDate.getFullYear(), viewDate.getMonth(), viewDate.getDate());
-            while(getHParts(runner).day !== 1) runner.setDate(runner.getDate() - 1);
-            let startDay = runner.getDay();
-            let hMonth = getHParts(runner).month;
-            for (let i = 0; i < startDay; i++) grid.innerHTML += `<div></div>`;
-            while(getHParts(runner).month === hMonth) {
+            let currentM = getHMonth(runner);
+            while(getHDay(runner) != 1) {
+                runner.setDate(runner.getDate() - 1);
+            }
+            
+            // رسم الفراغات بناءً على يوم الأسبوع الذي صادف يوم 1 هجري
+            for (let i = 0; i < runner.getDay(); i++) grid.innerHTML += `<div></div>`;
+
+            // رسم أيام الشهر الهجري
+            while(getHMonth(runner) === currentM) {
                 let isToday = new Date().toDateString() === runner.toDateString() ? "today" : "";
-                grid.innerHTML += `<div class="day-cell ${isToday}">${getHParts(runner).day}</div>`;
+                grid.innerHTML += `<div class="day-cell ${isToday}">${getHDay(runner)}</div>`;
                 runner.setDate(runner.getDate() + 1);
             }
         } else {

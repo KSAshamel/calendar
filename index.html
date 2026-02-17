@@ -112,8 +112,8 @@
 
     function changeMonth(step) {
         if (isHijri) {
-            // التحرك بمقدار 29 يوماً لضمان الانتقال للشهر الهجري التالي/السابق
-            viewDate.setDate(viewDate.getDate() + (step * 29));
+            viewDate.setDate(15); // الانتقال لمنتصف الشهر لضمان القفز الصحيح
+            viewDate.setMonth(viewDate.getMonth() + step);
         } else {
             viewDate.setMonth(viewDate.getMonth() + step);
         }
@@ -130,21 +130,23 @@
             const hFormatter = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-uma', {month:'long', year:'numeric'});
             monthLabel.innerText = hFormatter.format(viewDate);
 
-            // إيجاد أول يوم في الشهر الهجري الحالي
-            let temp = new Date(viewDate.getFullYear(), viewDate.getMonth(), viewDate.getDate());
+            // العثور على أول يوم في الشهر الهجري
+            let temp = new Date(viewDate.getFullYear(), viewDate.getMonth(), 15);
             let currentHMonth = new Intl.DateTimeFormat('en-u-ca-islamic-uma', {month:'numeric'}).format(temp);
             
-            let firstDay = new Date(temp);
-            while(new Intl.DateTimeFormat('en-u-ca-islamic-uma', {month:'numeric'}).format(firstDay) === currentHMonth) {
-                firstDay.setDate(firstDay.getDate() - 1);
+            let firstDayDate = new Date(temp);
+            while(new Intl.DateTimeFormat('en-u-ca-islamic-uma', {month:'numeric'}).format(firstDayDate) === currentHMonth) {
+                firstDayDate.setDate(firstDayDate.getDate() - 1);
             }
-            firstDay.setDate(firstDay.getDate() + 1);
+            firstDayDate.setDate(firstDayDate.getDate() + 1);
 
-            for (let i = 0; i < firstDay.getDay(); i++) grid.innerHTML += `<div></div>`;
+            // رسم الفراغات
+            for (let i = 0; i < firstDayDate.getDay(); i++) grid.innerHTML += `<div></div>`;
 
-            let runner = new Date(firstDay);
+            // رسم الأيام بناء على أرقام أم القرى
+            let runner = new Date(firstDayDate);
             while(new Intl.DateTimeFormat('en-u-ca-islamic-uma', {month:'numeric'}).format(runner) === currentHMonth) {
-                let dNum = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-uma', {day:'numeric'}).format(runner);
+                let dNum = new Intl.DateTimeFormat('en-u-ca-islamic-uma', {day:'numeric'}).format(runner);
                 let isToday = new Date().toDateString() === runner.toDateString() ? "today" : "";
                 grid.innerHTML += `<div class="day-cell ${isToday}">${dNum}</div>`;
                 runner.setDate(runner.getDate() + 1);

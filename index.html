@@ -26,7 +26,7 @@
         .nav-btn { cursor: pointer; border: none; background: #f0f0f0; padding: 8px 14px; border-radius: 6px; }
         body.dark .nav-btn { background: #444; color: #fff; }
 
-        .switch-mode { display: flex; justify(content: center; padding: 10px; gap: 10px; }
+        .switch-mode { display: flex; justify-content: center; padding: 10px; gap: 10px; }
         .toggle-btn { cursor: pointer; padding: 6px 15px; background: #eee; border: 1px solid var(--border); border-radius: 20px; font-size: 12px; color: #444; }
         body.dark .toggle-btn { background: #444; color: #fff; }
 
@@ -91,13 +91,13 @@
             const r = await fetch(`https://api.aladhan.com{city}&country=SA&method=4`);
             const d = await r.json();
             prayerTimes = d.data.timings;
+            document.getElementById('current-location-display').innerText = `المدينة الحالية: ${document.getElementById('citySelect').options[document.getElementById('citySelect').selectedIndex].text}`;
             updatePrayerUI();
         } catch(e) { console.error("Error"); }
     }
 
     function updatePrayerUI() {
-        const list = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
-        list.forEach(p => {
+        ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].forEach(p => {
             let [h, m] = prayerTimes[p].split(':');
             let hrs = parseInt(h);
             document.getElementById(p).innerText = `${hrs % 12 || 12}:${m} ${hrs >= 12 ? 'م' : 'ص'}`;
@@ -138,14 +138,15 @@
         document.getElementById('monthDisplay').innerText = viewDate.toLocaleString('ar-SA', options);
 
         let firstDay = new Date(y, m, 1).getDay();
-        let totalDays = new Date(y, m + 1, 0).getDate();
+        let lastDay = new Date(y, m + 1, 0).getDate();
         for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div></div>`;
-        for (let d = 1; d <= totalDays; d++) {
+        for (let d = 1; d <= totalDays(); d++) {
             let cur = new Date(y, m, d);
             let isT = new Date().toDateString() === cur.toDateString();
             let displayNum = isHijri ? new Intl.DateTimeFormat('ar-SA-u-ca-islamic-uma', {day:'numeric'}).format(cur) : d;
             grid.innerHTML += `<div class="day-cell ${isT ? 'today' : ''}"><span class="day-num">${displayNum}</span></div>`;
         }
+        function totalDays() { return new Date(y, m + 1, 0).getDate(); }
     }
 
     function toggleCalendarMode() {

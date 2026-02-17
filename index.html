@@ -114,22 +114,19 @@
 
     function changeMonth(step) {
         if (isHijri) {
-            viewDate.setDate(15);
-            viewDate.setMonth(viewDate.getMonth() + step);
+            let mid = new Date(viewDate.getFullYear(), viewDate.getMonth(), 15);
+            mid.setMonth(mid.getMonth() + step);
+            viewDate = mid;
         } else {
             viewDate.setMonth(viewDate.getMonth() + step);
         }
         renderCalendar();
     }
 
-    // دالة لاستخراج اليوم الهجري فقط كرقم
-    function getHDay(date) {
-        return new Intl.DateTimeFormat('en-u-ca-islamic-uma-nu-latn', {day:'numeric'}).format(date);
-    }
-
-    // دالة لاستخراج الشهر الهجري فقط كرقم
-    function getHMonth(date) {
-        return new Intl.DateTimeFormat('en-u-ca-islamic-uma-nu-latn', {month:'numeric'}).format(date);
+    function getHP(date) {
+        const p = new Intl.DateTimeFormat('en-u-ca-islamic-uma-nu-latn', {day:'numeric', month:'numeric'}).formatToParts(date);
+        const r = {}; p.forEach(x => r[x.type] = x.value);
+        return { d: parseInt(r.day), m: parseInt(r.month) };
     }
 
     function renderCalendar() {
@@ -140,21 +137,14 @@
 
         if (isHijri) {
             monthLabel.innerText = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-uma', {month:'long', year:'numeric'}).format(viewDate);
-            
-            // العودة باليوم حتى نصل لأول يوم في الشهر الهجري الحالي
             let runner = new Date(viewDate.getFullYear(), viewDate.getMonth(), viewDate.getDate());
-            let currentM = getHMonth(runner);
-            while(getHDay(runner) != 1) {
-                runner.setDate(runner.getDate() - 1);
-            }
-            
-            // رسم الفراغات بناءً على يوم الأسبوع الذي صادف يوم 1 هجري
-            for (let i = 0; i < runner.getDay(); i++) grid.innerHTML += `<div></div>`;
-
-            // رسم أيام الشهر الهجري
-            while(getHMonth(runner) === currentM) {
+            while(getHP(runner).d !== 1) runner.setDate(runner.getDate() - 1);
+            let startWeekDay = runner.getDay();
+            let hMonth = getHP(runner).m;
+            for (let i = 0; i < startWeekDay; i++) grid.innerHTML += `<div></div>`;
+            while(getHP(runner).m === hMonth) {
                 let isToday = new Date().toDateString() === runner.toDateString() ? "today" : "";
-                grid.innerHTML += `<div class="day-cell ${isToday}">${getHDay(runner)}</div>`;
+                grid.innerHTML += `<div class="day-cell ${isToday}">${getHP(runner).d}</div>`;
                 runner.setDate(runner.getDate() + 1);
             }
         } else {
@@ -185,8 +175,7 @@
 
     function startTimer() {
         clearInterval(timerInterval);
-        const pNames = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
-        const pAr = ["الفجر", "الظهر", "العصر", "المغرب", "العشاء"];
+        const pNames = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"], pAr = ["الفجر", "الظهر", "العصر", "المغرب", "العشاء"];
         timerInterval = setInterval(() => {
             const now = new Date(); const d = saudiCities[currentCity];
             let nextP = null, nextN = "";

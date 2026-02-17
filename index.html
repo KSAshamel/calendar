@@ -36,7 +36,7 @@
 <body class="dark">
 <div class="calendar-card">
     <div class="prayer-header">
-        <span id="timer-label">باقي على الأذان القادم</span>
+        <span id="timer-label">جاري الحساب...</span>
         <span id="timer">00:00:00</span>
         <div class="prayer-grid">
             <div class="prayer-item"><span class="p-n">الفجر</span><span class="p-t" id="Fajr">--:--</span></div>
@@ -74,9 +74,7 @@
         <button class="toggle-btn" onclick="changeMonth(1)">❯</button>
     </div>
     <div class="grid" id="calendarGrid"></div>
-    <div class="shamel-footer">
-        <a href="https://ksashamel.github.io" target="_blank" class="btn-shamel">شامل</a>
-    </div>
+    <div class="shamel-footer"><a href="https://ksashamel.github.io" target="_blank" class="btn-shamel">شامل</a></div>
 </div>
 
 <script>
@@ -114,19 +112,18 @@
 
     function changeMonth(step) {
         if (isHijri) {
-            let mid = new Date(viewDate.getFullYear(), viewDate.getMonth(), 15);
-            mid.setMonth(mid.getMonth() + step);
-            viewDate = mid;
+            viewDate.setDate(15);
+            viewDate.setMonth(viewDate.getMonth() + step);
         } else {
             viewDate.setMonth(viewDate.getMonth() + step);
         }
         renderCalendar();
     }
 
-    function getHP(date) {
-        const p = new Intl.DateTimeFormat('en-u-ca-islamic-uma-nu-latn', {day:'numeric', month:'numeric'}).formatToParts(date);
-        const r = {}; p.forEach(x => r[x.type] = x.value);
-        return { d: parseInt(r.day), m: parseInt(r.month) };
+    function getHParts(date) {
+        const parts = new Intl.DateTimeFormat('en-u-ca-islamic-uma-nu-latn', {day:'numeric', month:'numeric', year:'numeric'}).formatToParts(date);
+        const res = {}; parts.forEach(p => res[p.type] = p.value);
+        return { d: parseInt(res.day), m: parseInt(res.month) };
     }
 
     function renderCalendar() {
@@ -138,13 +135,13 @@
         if (isHijri) {
             monthLabel.innerText = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-uma', {month:'long', year:'numeric'}).format(viewDate);
             let runner = new Date(viewDate.getFullYear(), viewDate.getMonth(), viewDate.getDate());
-            while(getHP(runner).d !== 1) runner.setDate(runner.getDate() - 1);
+            while(getHParts(runner).d !== 1) runner.setDate(runner.getDate() - 1);
             let startWeekDay = runner.getDay();
-            let hMonth = getHP(runner).m;
+            let hMonth = getHParts(runner).m;
             for (let i = 0; i < startWeekDay; i++) grid.innerHTML += `<div></div>`;
-            while(getHP(runner).m === hMonth) {
+            while(getHParts(runner).m === hMonth) {
                 let isToday = new Date().toDateString() === runner.toDateString() ? "today" : "";
-                grid.innerHTML += `<div class="day-cell ${isToday}">${getHP(runner).d}</div>`;
+                grid.innerHTML += `<div class="day-cell ${isToday}">${getHParts(runner).d}</div>`;
                 runner.setDate(runner.getDate() + 1);
             }
         } else {

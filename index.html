@@ -9,33 +9,26 @@
         body.dark { --bg: #1a1a1a; --text: #eaeaea; --card-bg: #2a2a2a; --border: #444; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 10px; margin: 0; transition: 0.3s; }
         .calendar-card { background: var(--card-bg); width: 100%; max-width: 400px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid var(--border); display: flex; flex-direction: column; }
-        
         .prayer-header { background: #111; color: #fff; padding: 15px; text-align: center; border-bottom: 3px solid var(--saudi-green); }
         #timer-label { font-size: 13px; color: #bbb; display: block; margin-bottom: 2px; }
         #timer { color: var(--gold); font-weight: bold; font-family: monospace; font-size: 20px; display: block; }
-        
         .prayer-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 10px; }
         .prayer-item { background: rgba(255,255,255,0.08); padding: 5px 2px; border-radius: 6px; text-align: center; }
         .p-n { display: block; font-size: 10px; color: #bbb; }
         .p-t { display: block; font-size: 11px; font-weight: bold; color: var(--gold); }
-
         .controls-area { padding: 10px; background: var(--card-bg); border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
         .select-city { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); font-size: 14px; cursor: pointer; }
         .btn-gps { width: 100%; padding: 10px; background: var(--saudi-green); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; }
-        
         .switch-mode { display: flex; justify-content: center; padding: 8px; gap: 10px; }
         .toggle-btn { cursor: pointer; padding: 6px 15px; background: #eee; border: 1px solid var(--border); border-radius: 20px; font-size: 11px; color: #333; }
         body.dark .toggle-btn { background: #444; color: #fff; }
-
         .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; }
         .month-label { font-weight: bold; font-size: 16px; color: var(--saudi-green); }
         body.dark .month-label { color: var(--gold); }
-
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); padding: 5px 10px; min-height: 250px; }
         .day-name { text-align: center; font-size: 11px; font-weight: bold; color: #999; padding-bottom: 10px; }
         .day-cell { height: 45px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; font-size: 15px; position: relative; cursor: pointer; }
         .day-cell.today { background: var(--primary); color: white; font-weight: bold; }
-
         .shamel-footer { padding: 20px 10px; text-align: center; border-top: 1px solid var(--border); }
         .btn-shamel { display: inline-block; width: 85%; padding: 14px 0; background: #2c2c2c; color: #fff !important; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; border: 2px solid var(--neon-green); box-shadow: 0 0 10px rgba(57, 255, 20, 0.4); transition: 0.3s; }
     </style>
@@ -119,20 +112,19 @@
 
     function changeMonth(step) {
         if (isHijri) {
-            viewDate.setDate(15);
-            viewDate.setMonth(viewDate.getMonth() + step);
+            let temp = new Date(viewDate.getFullYear(), viewDate.getMonth(), 15);
+            temp.setMonth(temp.getMonth() + step);
+            viewDate = temp;
         } else {
             viewDate.setMonth(viewDate.getMonth() + step);
         }
         renderCalendar();
     }
 
-    function getHijriParts(date) {
-        const fmt = new Intl.DateTimeFormat('en-u-ca-islamic-uma-nu-latn', {day:'numeric', month:'numeric', year:'numeric'});
-        const p = fmt.formatToParts(date);
-        const res = {};
-        p.forEach(x => res[x.type] = x.value);
-        return { day: parseInt(res.day), month: parseInt(res.month), year: parseInt(res.year) };
+    function getH(date) {
+        const parts = new Intl.DateTimeFormat('en-u-ca-islamic-uma-nu-latn', {day:'numeric', month:'numeric', year:'numeric'}).formatToParts(date);
+        const d = {}; parts.forEach(p => d[p.type] = p.value);
+        return { day: parseInt(d.day), month: parseInt(d.month) };
     }
 
     function renderCalendar() {
@@ -142,44 +134,33 @@
         ['ح', 'ن', 'ث', 'ر', 'خ', 'ج', 'س'].forEach(d => grid.innerHTML += `<div class="day-name">${d}</div>`);
 
         if (isHijri) {
-            const hFormatter = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-uma', {month:'long', year:'numeric'});
-            monthLabel.innerText = hFormatter.format(viewDate);
-
-            let temp = new Date(viewDate.getFullYear(), viewDate.getMonth(), viewDate.getDate());
-            let currentMonth = getHijriParts(temp).month;
-            
-            // العثور على اليوم الأول في الشهر الهجري
-            let runner = new Date(temp);
-            while(getHijriParts(runner).day !== 1) {
-                runner.setDate(runner.getDate() - 1);
-            }
-            
-            for (let i = 0; i < runner.getDay(); i++) grid.innerHTML += `<div></div>`;
-
-            let startMonth = getHijriParts(runner).month;
-            while(getHijriParts(runner).month === startMonth) {
-                let hDay = getHijriParts(runner).day;
+            monthLabel.innerText = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-uma', {month:'long', year:'numeric'}).format(viewDate);
+            let runner = new Date(viewDate.getFullYear(), viewDate.getMonth(), viewDate.getDate());
+            while(getH(runner).day !== 1) runner.setDate(runner.getDate() - 1);
+            let startDay = runner.getDay();
+            let hMonth = getH(runner).month;
+            for (let i = 0; i < startDay; i++) grid.innerHTML += `<div></div>`;
+            while(getH(runner).month === hMonth) {
                 let isToday = new Date().toDateString() === runner.toDateString() ? "today" : "";
-                grid.innerHTML += `<div class="day-cell ${isToday}">${hDay}</div>`;
+                grid.innerHTML += `<div class="day-cell ${isToday}">${getH(runner).day}</div>`;
                 runner.setDate(runner.getDate() + 1);
             }
         } else {
             const months = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
             monthLabel.innerText = `${months[viewDate.getMonth()]} ${viewDate.getFullYear()}`;
-            let firstDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay();
-            let totalDays = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
-            for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div></div>`;
-            for (let i = 1; i <= totalDays; i++) {
-                let d = new Date(viewDate.getFullYear(), viewDate.getMonth(), i);
-                let isToday = new Date().toDateString() === d.toDateString() ? "today" : "";
-                grid.innerHTML += `<div class="day-cell ${isToday}">${i}</div>`;
+            let runner = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
+            for (let i = 0; i < runner.getDay(); i++) grid.innerHTML += `<div></div>`;
+            let m = runner.getMonth();
+            while(runner.getMonth() === m) {
+                let isToday = new Date().toDateString() === runner.toDateString() ? "today" : "";
+                grid.innerHTML += `<div class="day-cell ${isToday}">${runner.getDate()}</div>`;
+                runner.setDate(runner.getDate() + 1);
             }
         }
     }
 
     function format12h(t) {
-        let [h, m] = t.split(':');
-        h = parseInt(h);
+        let [h, m] = t.split(':'); h = parseInt(h);
         return `${String(h % 12 || 12).padStart(2, '0')}:${m}`;
     }
 
@@ -194,24 +175,19 @@
         clearInterval(timerInterval);
         const pNames = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
         const pAr = ["الفجر", "الظهر", "العصر", "المغرب", "العشاء"];
-
         timerInterval = setInterval(() => {
-            const now = new Date();
-            const data = saudiCities[currentCity];
+            const now = new Date(); const d = saudiCities[currentCity];
             let nextP = null, nextN = "";
-
             for (let i = 0; i < pNames.length; i++) {
-                const [h, m] = data[pNames[i]].split(':');
+                const [h, m] = d[pNames[i]].split(':');
                 const pDate = new Date(); pDate.setHours(h, m, 0);
                 if (pDate > now) { nextP = pDate; nextN = pAr[i]; break; }
             }
-
             if (!nextP) {
-                const [h, m] = data["Fajr"].split(':');
+                const [h, m] = d["Fajr"].split(':');
                 nextP = new Date(); nextP.setDate(now.getDate() + 1); nextP.setHours(h, m, 0);
                 nextN = "الفجر";
             }
-
             const diff = nextP - now;
             const hh = Math.floor(diff / 3600000), mm = Math.floor((diff % 3600000) / 60000), ss = Math.floor((diff % 60000) / 1000);
             document.getElementById('timer-label').innerText = `باقي على صلاة ${nextN}`;
@@ -227,8 +203,7 @@
                     let d = Math.abs(saudiCities[c].lat - pos.coords.latitude);
                     if (d < minDist) { minDist = d; closest = c; }
                 }
-                document.getElementById('citySelect').value = closest;
-                updatePrayers(closest);
+                document.getElementById('citySelect').value = closest; updatePrayers(closest);
             });
         }
     }

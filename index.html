@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تقويم أم القرى الذكي - النسخة الاحترافية</title>
+    <title>تقويم أم القرى - النسخة المستقلة</title>
     <style>
         :root { --saudi-green: #006C35; --primary: #0078d4; --gold: #ffd700; --bg: #f4f7f6; --text: #222; --card-bg: #fff; --border: #ddd; }
         body.dark { --bg: #1a1a1a; --text: #eaeaea; --card-bg: #2a2a2a; --border: #444; }
@@ -16,8 +16,7 @@
         .p-n { display: block; font-size: 10px; color: #bbb; }
         .p-t { display: block; font-size: 12px; font-weight: bold; color: var(--gold); }
         .controls-area { padding: 15px; background: var(--card-bg); border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
-        .select-city { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); }
-        .btn-gps { width: 100%; padding: 10px; background: var(--saudi-green); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .select-city { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); font-family: inherit; }
         .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; }
         .nav-btn { cursor: pointer; border: none; background: #f0f0f0; padding: 8px 14px; border-radius: 6px; }
         body.dark .nav-btn { background: #444; color: #fff; }
@@ -28,7 +27,7 @@
         .day-name { text-align: center; font-size: 11px; font-weight: bold; color: #999; padding-bottom: 10px; }
         .day-cell { height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 15px; }
         .day-cell.today { background: var(--primary); color: white; font-weight: bold; }
-        #status { font-size: 11px; text-align: center; color: var(--saudi-green); font-weight: bold; min-height: 15px; }
+        #status { font-size: 11px; text-align: center; color: var(--saudi-green); font-weight: bold; }
     </style>
 </head>
 <body>
@@ -46,8 +45,7 @@
     </div>
 
     <div class="controls-area">
-        <select class="select-city" id="citySelect" onchange="fetchByCity(this.value)">
-            <option value="" disabled selected>اختر مدينة...</option>
+        <select class="select-city" id="citySelect" onchange="updatePrayers(this.value)">
             <option value="Makkah">مكة المكرمة</option>
             <option value="Riyadh">الرياض</option>
             <option value="Medina">المدينة المنورة</option>
@@ -55,13 +53,15 @@
             <option value="Dammam">الدمام</option>
             <option value="Abha">أبها</option>
             <option value="Tabuk">تبوك</option>
+            <option value="Hail">حائل</option>
+            <option value="Buraidah">بريدة</option>
+            <option value="Jizan">جيزان</option>
         </select>
-        <button class="btn-gps" onclick="getLocation()">📍 مزامنة تلقائية للموقع</button>
-        <div id="status"></div>
+        <div id="status">الوضع المحلي (يعمل بدون إنترنت)</div>
     </div>
 
     <div class="switch-mode">
-        <button class="toggle-btn" onclick="toggleMode()" id="modeBtn">التبديل للميلادي</button>
+        <button class="toggle-btn" onclick="toggleMode()">التبديل للميلادي</button>
         <button class="toggle-btn" onclick="toggleDark()">🌙 الوضع الليلي</button>
     </div>
 
@@ -74,46 +74,37 @@
 </div>
 
 <script>
-    let viewDate = new Date(), isHijri = true, prayerTimes = {}, countdownInterval;
+    let viewDate = new Date(), isHijri = true, countdownInterval;
 
-    // استخدام محرك جلب بيانات يتجاوز قيود CORS
-    async function safeFetch(apiUrl) {
-        const status = document.getElementById('status');
-        status.innerText = "جاري الاتصال بالسيرفر...";
-        try {
-            // إضافة Random لمنع المتصفح من استخدام بيانات قديمة
-            const response = await fetch(`https://api.allorigins.win{encodeURIComponent(apiUrl)}&ts=${Date.now()}`);
-            const wrapper = await response.json();
-            const data = JSON.parse(wrapper.contents);
-            
-            if (data && data.data) {
-                prayerTimes = data.data.timings;
-                ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].forEach(p => {
-                    document.getElementById(p).innerText = prayerTimes[p].substring(0, 5);
-                });
-                status.innerText = "تم التحديث بنجاح ✅";
-                startCountdown();
-            }
-        } catch (e) {
-            status.innerText = "⚠️ فشل الاتصال. جرب اختيار مدينة يدوياً.";
-        }
-    }
+    // قاعدة بيانات محلية ثابتة للمدن الرئيسية (أوقات تقريبية)
+    const saudiCitiesData = {
+        Makkah: { Fajr: "05:18", Dhuhr: "12:28", Asr: "15:48", Maghrib: "18:22", Isha: "19:52" },
+        Riyadh: { Fajr: "04:55", Dhuhr: "12:05", Asr: "15:25", Maghrib: "17:58", Isha: "19:28" },
+        Medina: { Fajr: "05:22", Dhuhr: "12:30", Asr: "15:52", Maghrib: "18:25", Isha: "19:55" },
+        Jeddah: { Fajr: "05:21", Dhuhr: "12:31", Asr: "15:51", Maghrib: "18:25", Isha: "19:55" },
+        Dammam: { Fajr: "04:42", Dhuhr: "11:53", Asr: "15:12", Maghrib: "17:46", Isha: "19:16" },
+        Abha: { Fajr: "05:12", Dhuhr: "12:22", Asr: "15:42", Maghrib: "18:15", Isha: "19:45" },
+        Tabuk: { Fajr: "05:45", Dhuhr: "12:45", Asr: "16:10", Maghrib: "18:45", Isha: "20:15" },
+        Hail: { Fajr: "05:28", Dhuhr: "12:32", Asr: "15:55", Maghrib: "18:22", Isha: "19:52" },
+        Buraidah: { Fajr: "05:15", Dhuhr: "12:21", Asr: "15:45", Maghrib: "18:12", Isha: "19:42" },
+        Jizan: { Fajr: "05:10", Dhuhr: "12:18", Asr: "15:38", Maghrib: "18:05", Isha: "19:35" }
+    };
 
-    function fetchByCity(city) { safeFetch(`https://api.aladhan.com{city}&country=SA&method=4`); }
+    let currentPrayerTimes = saudiCitiesData.Makkah;
 
-    function getLocation() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((pos) => {
-                safeFetch(`https://api.aladhan.com{pos.coords.latitude}&longitude=${pos.coords.longitude}&method=4`);
-            }, () => alert("يرجى تفعيل إذن الموقع."));
-        }
+    function updatePrayers(city) {
+        currentPrayerTimes = saudiCitiesData[city];
+        ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].forEach(p => {
+            document.getElementById(p).innerText = currentPrayerTimes[p];
+        });
+        startCountdown();
     }
 
     function startCountdown() {
         if (countdownInterval) clearInterval(countdownInterval);
         countdownInterval = setInterval(() => {
             const now = new Date();
-            const pList = [{n:'الفجر',t:prayerTimes.Fajr}, {n:'الظهر',t:prayerTimes.Dhuhr}, {n:'العصر',t:prayerTimes.Asr}, {n:'المغرب',t:prayerTimes.Maghrib}, {n:'العشاء',t:prayerTimes.Isha}];
+            const pList = [{n:'الفجر',t:currentPrayerTimes.Fajr}, {n:'الظهر',t:currentPrayerTimes.Dhuhr}, {n:'العصر',t:currentPrayerTimes.Asr}, {n:'المغرب',t:currentPrayerTimes.Maghrib}, {n:'العشاء',t:currentPrayerTimes.Isha}];
             let next = null;
             for (let p of pList) {
                 const [h, m] = p.t.split(':');
@@ -155,7 +146,7 @@
     function toggleDark() { document.body.classList.toggle('dark'); }
     function changeMonth(n) { if (isHijri) viewDate.setDate(viewDate.getDate() + (n * 30)); else viewDate.setMonth(viewDate.getMonth() + n); render(); }
 
-    window.onload = () => { render(); fetchByCity('Makkah'); };
+    window.onload = () => { render(); updatePrayers('Makkah'); };
 </script>
 </body>
 </html>

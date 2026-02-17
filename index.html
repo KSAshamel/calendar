@@ -49,14 +49,12 @@
     <div class="controls-area">
         <select class="select-city" id="citySelect" onchange="fetchPrayers(this.value)">
             <option value="Makkah">مكة المكرمة</option><option value="Riyadh">الرياض</option>
-            <option value="Medina">المدينة المنورة</option><option value="Jeddah">جدة</option>
+            <option value="Madinah">المدينة المنورة</option><option value="Jeddah">جدة</option>
             <option value="Dammam">الدمام</option><option value="Abha">أبها</option>
             <option value="Tabuk">تبوك</option><option value="Hail">حائل</option>
             <option value="Buraidah">بريدة</option><option value="Jizan">جيزان</option>
             <option value="Najran">نجران</option><option value="Sakaka">سكاكا</option>
-            <option value="Arar">عرعر</option><option value="Taif">الطائف</option>
-            <option value="Al-Khobar">الخبر</option><option value="Yanbu">ينبع</option>
-            <option value="Hofuf">الهفوف</option><option value="Jubail">الجبيل</option>
+            <option value="Arar">عرعر</option>
         </select>
         <button class="btn-gps" onclick="syncLocation()">📍 تحديد أقرب مدينة تلقائياً</button>
         <div id="current-location-display">المدينة الحالية: مكة المكرمة</div>
@@ -131,8 +129,7 @@
         let m = viewDate.getMonth(), y = viewDate.getFullYear();
         
         let locale = isHijri ? 'ar-SA-u-ca-islamic-uma' : 'ar-SA';
-        let options = { month: 'long', year: 'numeric' };
-        document.getElementById('monthDisplay').innerText = new Intl.DateTimeFormat(locale, options).format(viewDate);
+        document.getElementById('monthDisplay').innerText = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(viewDate);
 
         let firstDay = new Date(y, m, 1).getDay();
         let lastDay = new Date(y, m + 1, 0).getDate();

@@ -71,17 +71,22 @@
 </div>
 <script>
     let viewDate = new Date(), isHijri = true, prayerTimes = {};
-    async function fetchPrayers(city) {
+
+    async function fetchPrayers(city, lat = null, lon = null) {
+        let url = `https://api.aladhan.com{city}&country=SA&method=4`;
+        if (lat && lon) url = `https://api.aladhan.com{lat}&longitude=${lon}&method=4`;
+        
         try {
-            const r = await fetch(`https://api.aladhan.com{city}&country=SA&method=4`);
+            const r = await fetch(url);
             const d = await r.json();
             prayerTimes = d.data.timings;
-            updatePrayerUI(city);
-        } catch(e) { console.error("Error"); }
+            const select = document.getElementById('citySelect');
+            document.getElementById('current-location-display').innerText = lat ? "المدينة: موقعك الحالي" : `المدينة الحالية: ${select.options[select.selectedIndex].text}`;
+            updatePrayerUI();
+        } catch(e) { console.error("Error fetching prayers"); }
     }
-    function updatePrayerUI(cityKey) {
-        const select = document.getElementById('citySelect');
-        document.getElementById('current-location-display').innerText = `المدينة الحالية: ${select.options[select.selectedIndex].text}`;
+
+    function updatePrayerUI() {
         ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].forEach(p => {
             let [h, m] = prayerTimes[p].split(':');
             let hrs = parseInt(h);
@@ -89,6 +94,7 @@
         });
         startCountdown();
     }
+
     function startCountdown() {
         clearInterval(window.timerInt);
         window.timerInt = setInterval(() => {
@@ -101,15 +107,19 @@
                 let d = new Date(); d.setHours(h, m, 0);
                 if (d > now) { next = { n: p, t: d }; break; }
             }
-            if(next) {
-                let diff = next.t - now;
-                let hh = Math.floor(diff/3600000), mm = Math.floor((diff%3600000)/60000), ss = Math.floor((diff%60000)/1000);
-                const names = {Fajr:'الفجر', Dhuhr:'الظهر', Asr:'العصر', Maghrib:'المغرب', Isha:'العشاء'};
-                document.getElementById('next-p-name').innerText = names[next.n];
-                document.getElementById('timer').innerText = `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+            if(!next) { // لو انتهت صلوات اليوم
+                let [h, m] = prayerTimes['Fajr'].split(':');
+                let d = new Date(); d.setDate(d.getDate() + 1); d.setHours(h, m, 0);
+                next = { n: 'Fajr', t: d };
             }
+            let diff = next.t - now;
+            let hh = Math.floor(diff/3600000), mm = Math.floor((diff%3600000)/60000), ss = Math.floor((diff%60000)/1000);
+            const names = {Fajr:'الفجر', Dhuhr:'الظهر', Asr:'العصر', Maghrib:'المغرب', Isha:'العشاء'};
+            document.getElementById('next-p-name').innerText = names[next.n];
+            document.getElementById('timer').innerText = `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
         }, 1000);
     }
+
     function renderCalendar() {
         const grid = document.getElementById('calendarGrid');
         grid.innerHTML = '';
@@ -127,13 +137,19 @@
             grid.innerHTML += `<div class="day-cell ${isT ? 'today' : ''}"><span class="day-num">${displayNum}</span></div>`;
         }
     }
-    function toggleCalendarMode() {
-        isHijri = !isHijri;
-        document.getElementById('modeBtn').innerText = isHijri ? "التبديل للميلادي" : "التبديل للهجري";
-        renderCalendar();
-    }
+
+    function toggleCalendarMode() { isHijri = !isHijri; document.getElementById('modeBtn').innerText = isHijri ? "التبديل للميلادي" : "التبديل للهجري"; renderCalendar(); }
     function changeMonth(s) { viewDate.setMonth(viewDate.getMonth() + s); renderCalendar(); }
-    function syncLocation() { if (navigator.geolocation) { navigator.geolocation.getCurrentPosition(() => fetchPrayers('Makkah')); } }
+    
+    function syncLocation() { 
+        if (navigator.geolocation) { 
+            navigator.geolocation.getCurrentPosition(
+                (p) => fetchPrayers(null, p.coords.latitude, p.coords.longitude),
+                () => fetchPrayers('Makkah') // فشل تحديد الموقع، العودة لمكة
+            ); 
+        } 
+    }
+
     fetchPrayers('Makkah');
     renderCalendar();
 </script>

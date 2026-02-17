@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تقويم أم القرى الذكي</title>
+    <title>تقويم أم القرى - النسخة المستقرة</title>
     <style>
         :root { --saudi-green: #006C35; --primary: #0078d4; --gold: #ffd700; --bg: #f4f7f6; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; margin: 0; }
@@ -20,12 +20,12 @@
         .select-city { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-family: inherit; cursor: pointer; }
         .btn-gps { width: 100%; padding: 10px; background: var(--saudi-green); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
         
-        .switch-mode { display: flex; justify-content: center; padding: 10px; background: #fff; }
+        .switch-mode { display: flex; justify-content: center; padding: 10px; background: #fff; border-bottom: 1px solid #eee; }
         .toggle-btn { cursor: pointer; padding: 6px 20px; background: #eee; border: 1px solid #ddd; border-radius: 20px; font-size: 13px; font-weight: 600; color: #444; }
 
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); padding: 10px; background: #fff; }
         .day-name { text-align: center; font-size: 11px; font-weight: bold; color: #999; padding-bottom: 10px; }
-        .day-cell { height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 15px; position: relative; }
+        .day-cell { height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 15px; }
         .day-cell.today { background: var(--primary); color: white; font-weight: bold; }
         .day-cell.other-month { opacity: 0.2; }
 
@@ -35,7 +35,7 @@
         .p-n { display: block; font-size: 10px; color: #888; }
         .p-t { display: block; font-size: 12px; font-weight: bold; color: var(--saudi-green); }
         
-        #status { font-size: 11px; text-align: center; margin-top: 2px; color: #666; min-height: 15px; font-weight: bold; }
+        #status { font-size: 11px; text-align: center; margin-top: 2px; color: var(--saudi-green); min-height: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -53,17 +53,17 @@
         <select class="select-city" id="citySelect" onchange="fetchByCity(this.value)">
             <option value="Makkah">مكة المكرمة</option>
             <option value="Riyadh">الرياض</option>
-            <option value="Madina">المدينة المنورة</option>
+            <option value="Medina">المدينة المنورة</option>
             <option value="Jeddah">جدة</option>
             <option value="Dammam">الدمام</option>
             <option value="Abha">أبها</option>
             <option value="Tabuk">تبوك</option>
-            <option value="Hail">حائل</option>
             <option value="Buraidah">بريدة</option>
+            <option value="Hail">حائل</option>
             <option value="Jizan">جيزان</option>
         </select>
         <button class="btn-gps" onclick="getLocation()">📍 استخدام موقعي الحالي</button>
-        <div id="status">جاري الاتصال...</div>
+        <div id="status">جاري الاتصال بالسيرفر...</div>
     </div>
 
     <div class="switch-mode">
@@ -74,11 +74,11 @@
 
     <div class="prayer-section">
         <div class="prayer-grid">
-            <div class="prayer-item"><span class="p-n">الفجر</span><span class="p-t" id="Fajr">05:15</span></div>
-            <div class="prayer-item"><span class="p-n">الظهر</span><span class="p-t" id="Dhuhr">12:25</span></div>
-            <div class="prayer-item"><span class="p-n">العصر</span><span class="p-t" id="Asr">15:45</span></div>
-            <div class="prayer-item"><span class="p-n">المغرب</span><span class="p-t" id="Maghrib">18:20</span></div>
-            <div class="prayer-item"><span class="p-n">العشاء</span><span class="p-t" id="Isha">19:50</span></div>
+            <div class="prayer-item"><span class="p-n">الفجر</span><span class="p-t" id="Fajr">--:--</span></div>
+            <div class="prayer-item"><span class="p-n">الظهر</span><span class="p-t" id="Dhuhr">--:--</span></div>
+            <div class="prayer-item"><span class="p-n">العصر</span><span class="p-t" id="Asr">--:--</span></div>
+            <div class="prayer-item"><span class="p-n">المغرب</span><span class="p-t" id="Maghrib">--:--</span></div>
+            <div class="prayer-item"><span class="p-n">العشاء</span><span class="p-t" id="Isha">--:--</span></div>
         </div>
     </div>
 </div>
@@ -89,37 +89,44 @@
     let prayerTimes = { Fajr: "05:15", Dhuhr: "12:25", Asr: "15:45", Maghrib: "18:20", Isha: "19:50" };
     let countdownInterval;
 
-    async function safeFetch(apiUrl) {
+    async function fetchPrayers(url) {
         const status = document.getElementById('status');
-        status.innerText = "جاري المزامنة...";
-        
-        // استخدام بروكسي أكثر استقراراً
-        const finalUrl = `https://corsproxy.io{encodeURIComponent(apiUrl)}`;
+        status.innerText = "جاري التحديث...";
+        status.style.color = "orange";
 
         try {
+            // إضافة عشوائية للرابط لمنع الكاش
+            const finalUrl = url + "&nocache=" + Math.random();
             const res = await fetch(finalUrl);
             const data = await res.json();
+            
             if (data && data.data) {
                 prayerTimes = data.data.timings;
                 ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].forEach(p => {
                     document.getElementById(p).innerText = prayerTimes[p].substring(0, 5);
                 });
                 status.innerText = "تم التحديث بنجاح ✅";
+                status.style.color = "green";
                 startCountdown();
             }
         } catch (e) {
-            status.innerText = "⚠️ فشل الجلب (السيرفر مشغول). الأوقات تقريبية.";
-            startCountdown(); // استمرار العد التنازلي بالأوقات الافتراضية
+            status.innerText = "⚠️ تعذر الاتصال. تأكد من الإنترنت.";
+            status.style.color = "red";
+            startCountdown();
         }
     }
 
-    function fetchByCity(city) { safeFetch(`https://api.aladhan.com{city}&country=SA&method=4`); }
+    function fetchByCity(city) {
+        const url = `https://api.aladhan.com{city}&country=SA&method=4`;
+        fetchPrayers(url);
+    }
 
     function getLocation() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((pos) => {
-                safeFetch(`https://api.aladhan.com{pos.coords.latitude}&longitude=${pos.coords.longitude}&method=4`);
-            }, () => alert("يرجى تفعيل إذن الموقع في المتصفح."));
+                const url = `https://api.aladhan.com{pos.coords.latitude}&longitude=${pos.coords.longitude}&method=4`;
+                fetchPrayers(url);
+            }, () => alert("يرجى تفعيل الموقع."));
         }
     }
 

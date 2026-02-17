@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تقويم</title>
+    <title>تقويم أم القرى - الشامل</title>
     <style>
         :root { --saudi-green: #006C35; --primary: #0078d4; --gold: #ffd700; --bg: #f4f7f6; --text: #222; --card-bg: #fff; --border: #ddd; }
         body.dark { --bg: #1a1a1a; --text: #eaeaea; --card-bg: #2a2a2a; --border: #444; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 20px; margin: 0; transition: 0.3s; }
-        .calendar-card { background: var(--card-bg); width: 100%; max-width: 420px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid var(--border); }
         
+        .calendar-card { background: var(--card-bg); width: 100%; max-width: 420px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid var(--border); display: flex; flex-direction: column; }
+        
+        /* قسم الأذان العلوي */
         .prayer-header { background: #222; color: #fff; padding: 15px; text-align: center; border-bottom: 3px solid var(--saudi-green); }
         #timer { color: var(--gold); font-weight: bold; font-family: monospace; font-size: 17px; }
         .prayer-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 10px; }
@@ -26,26 +28,23 @@
         .nav-btn { cursor: pointer; border: none; background: #f0f0f0; padding: 8px 14px; border-radius: 6px; }
         body.dark .nav-btn { background: #444; color: #fff; }
 
-        .switch-mode { display: flex; justify-content: center; padding: 10px; gap: 10px; }
+        .switch-mode { display: flex; justify-content: center; padding: 10px; gap: 10px; border-bottom: 1px solid var(--border); }
         .toggle-btn { cursor: pointer; padding: 6px 15px; background: #eee; border: 1px solid var(--border); border-radius: 20px; font-size: 12px; color: #444; }
         body.dark .toggle-btn { background: #444; color: #fff; }
 
-        .grid { display: grid; grid-template-columns: repeat(7, 1fr); padding: 10px; }
+        .grid { display: grid; grid-template-columns: repeat(7, 1fr); padding: 10px; flex-grow: 1; }
         .day-name { text-align: center; font-size: 11px; font-weight: bold; color: #999; padding-bottom: 10px; }
-        .day-cell { height: 65px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; font-size: 15px; position: relative; border: 1px solid transparent; }
+        .day-cell { height: 65px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; font-size: 15px; position: relative; }
         .day-cell.today { background: var(--primary); color: white; font-weight: bold; }
-        .day-num { font-weight: bold; }
         
-        /* المناسبات */
+        /* زر شامل الجديد */
+        .shamel-footer { padding: 15px; background: #fff; border-top: 1px solid var(--border); text-align: center; }
+        body.dark .shamel-footer { background: #2a2a2a; }
+        .btn-shamel { display: inline-block; width: 90%; padding: 12px; background: var(--primary); color: white; text-decoration: none; border-radius: 8px; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 10px rgba(0, 120, 212, 0.2); }
+        .btn-shamel:hover { background: #005a9e; transform: translateY(-2px); }
+
         .event-icon { font-size: 12px; margin-top: 4px; }
         .saudi-flag { width: 18px; height: 12px; background: var(--saudi-green); border-radius: 2px; margin-top: 4px; border: 1px solid white; }
-
-        /* التلميح */
-        .day-cell:hover::after {
-            content: attr(data-event); position: absolute; bottom: 100%; background: #333; color: #fff;
-            padding: 4px 8px; border-radius: 4px; font-size: 10px; white-space: nowrap; z-index: 100;
-        }
-        .day-cell[data-event=""]:hover::after { display: none; }
     </style>
 </head>
 <body>
@@ -71,10 +70,6 @@
             <option value="Dammam">الدمام</option>
             <option value="Abha">أبها</option>
             <option value="Tabuk">تبوك</option>
-            <option value="Hail">حائل</option>
-            <option value="Buraidah">بريدة</option>
-            <option value="Jizan">جيزان</option>
-            <option value="Najran">نجران</option>
         </select>
         <button class="btn-gps" onclick="syncLocation()">📍 تحديد أقرب مدينة تلقائياً</button>
         <div id="current-location-display">المدينة الحالية: مكة المكرمة</div>
@@ -90,7 +85,13 @@
         <div class="month-label" id="monthDisplay">--</div>
         <button class="nav-btn" onclick="changeMonth(1)">❯</button>
     </div>
+
     <div class="grid" id="calendarGrid"></div>
+
+    <!-- زر شامل في الأسفل -->
+    <div class="shamel-footer">
+        <a href="https://ksashamel.github.io" class="btn-shamel">شامل</a>
+    </div>
 </div>
 
 <script>
@@ -103,11 +104,7 @@
         Jeddah: { name: "جدة", lat: 21.54, lon: 39.17, Fajr: "05:21", Dhuhr: "12:31", Asr: "15:51", Maghrib: "18:25", Isha: "19:55" },
         Dammam: { name: "الدمام", lat: 26.42, lon: 50.08, Fajr: "04:42", Dhuhr: "11:53", Asr: "15:12", Maghrib: "17:46", Isha: "19:16" },
         Abha: { name: "أبها", lat: 18.21, lon: 42.50, Fajr: "05:12", Dhuhr: "12:22", Asr: "15:42", Maghrib: "18:15", Isha: "19:45" },
-        Tabuk: { name: "تبوك", lat: 28.38, lon: 36.56, Fajr: "05:45", Dhuhr: "12:45", Asr: "16:10", Maghrib: "18:45", Isha: "20:15" },
-        Hail: { name: "حائل", lat: 27.52, lon: 41.68, Fajr: "05:18", Dhuhr: "12:22", Asr: "15:48", Maghrib: "18:15", Isha: "19:45" },
-        Buraidah: { name: "بريدة", lat: 26.32, lon: 43.97, Fajr: "05:08", Dhuhr: "12:15", Asr: "15:38", Maghrib: "18:08", Isha: "19:38" },
-        Jizan: { name: "جيزان", lat: 16.88, lon: 42.55, Fajr: "05:15", Dhuhr: "12:25", Asr: "15:45", Maghrib: "18:18", Isha: "19:48" },
-        Najran: { name: "نجران", lat: 17.49, lon: 44.12, Fajr: "05:05", Dhuhr: "12:15", Asr: "15:35", Maghrib: "18:08", Isha: "19:38" }
+        Tabuk: { name: "تبوك", lat: 28.38, lon: 36.56, Fajr: "05:45", Dhuhr: "12:45", Asr: "16:10", Maghrib: "18:45", Isha: "20:15" }
     };
 
     const events = {
@@ -128,27 +125,18 @@
         startCountdown();
     }
 
-    function getDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371;
-        const dLat = (lat2-lat1)*Math.PI/180;
-        const dLon = (lon2-lon1)*Math.PI/180;
-        const a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    }
-
     function syncLocation() {
-        const display = document.getElementById('current-location-display');
-        if (!navigator.geolocation) return alert("الموقع غير مدعوم");
-        display.innerText = "جاري البحث...";
-        navigator.geolocation.getCurrentPosition((pos) => {
-            let closest = "Makkah", min = Infinity;
-            for (let id in saudiCitiesData) {
-                const d = getDistance(pos.coords.latitude, pos.coords.longitude, saudiCitiesData[id].lat, saudiCitiesData[id].lon);
-                if (d < min) { min = d; closest = id; }
-            }
-            document.getElementById('citySelect').value = closest;
-            updateByManualSelection(closest);
-        }, () => display.innerText = "يرجى تفعيل الموقع");
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((pos) => {
+                let closest = "Makkah", min = Infinity;
+                for (let id in saudiCitiesData) {
+                    const d = Math.sqrt(Math.pow(pos.coords.latitude - saudiCitiesData[id].lat, 2) + Math.pow(pos.coords.longitude - saudiCitiesData[id].lon, 2));
+                    if (d < min) { min = d; closest = id; }
+                }
+                document.getElementById('citySelect').value = closest;
+                updateByManualSelection(closest);
+            });
+        }
     }
 
     function startCountdown() {

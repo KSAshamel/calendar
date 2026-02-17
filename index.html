@@ -74,7 +74,9 @@
         <button class="toggle-btn" onclick="changeMonth(1)">❯</button>
     </div>
     <div class="grid" id="calendarGrid"></div>
-    <div class="shamel-footer"><a href="https://ksashamel.github.io" target="_blank" class="btn-shamel">شامل</a></div>
+    <div class="shamel-footer">
+        <a href="https://ksashamel.github.io/shamel/" target="_blank" class="btn-shamel">شامل</a>
+    </div>
 </div>
 
 <script>
@@ -121,10 +123,12 @@
         renderCalendar();
     }
 
-    function getH(date) {
-        const parts = new Intl.DateTimeFormat('en-u-ca-islamic-uma-nu-latn', {day:'numeric', month:'numeric', year:'numeric'}).formatToParts(date);
-        const d = {}; parts.forEach(p => d[p.type] = p.value);
-        return { day: parseInt(d.day), month: parseInt(d.month) };
+    function getHParts(date) {
+        const fmt = new Intl.DateTimeFormat('en-u-ca-islamic-uma-nu-latn', {day:'numeric', month:'numeric', year:'numeric'});
+        const p = fmt.formatToParts(date);
+        const res = {};
+        p.forEach(x => res[x.type] = x.value);
+        return { day: parseInt(res.day), month: parseInt(res.month) };
     }
 
     function renderCalendar() {
@@ -136,13 +140,13 @@
         if (isHijri) {
             monthLabel.innerText = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-uma', {month:'long', year:'numeric'}).format(viewDate);
             let runner = new Date(viewDate.getFullYear(), viewDate.getMonth(), viewDate.getDate());
-            while(getH(runner).day !== 1) runner.setDate(runner.getDate() - 1);
+            while(getHParts(runner).day !== 1) runner.setDate(runner.getDate() - 1);
             let startDay = runner.getDay();
-            let hMonth = getH(runner).month;
+            let hMonth = getHParts(runner).month;
             for (let i = 0; i < startDay; i++) grid.innerHTML += `<div></div>`;
-            while(getH(runner).month === hMonth) {
+            while(getHParts(runner).month === hMonth) {
                 let isToday = new Date().toDateString() === runner.toDateString() ? "today" : "";
-                grid.innerHTML += `<div class="day-cell ${isToday}">${getH(runner).day}</div>`;
+                grid.innerHTML += `<div class="day-cell ${isToday}">${getHParts(runner).day}</div>`;
                 runner.setDate(runner.getDate() + 1);
             }
         } else {

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تقويم</title>
+    <title>تقويم شامل</title>
     <style>
         :root { --saudi-green: #006C35; --primary: #0078d4; --gold: #ffd700; --bg: #f4f7f6; --text: #222; --card-bg: #fff; --border: #ddd; }
         body.dark { --bg: #1a1a1a; --text: #eaeaea; --card-bg: #2a2a2a; --border: #444; }
@@ -12,7 +12,8 @@
         .prayer-header { background: #222; color: #fff; padding: 15px; text-align: center; border-bottom: 3px solid var(--saudi-green); }
         #timer { color: var(--gold); font-weight: bold; font-family: monospace; font-size: 17px; }
         .prayer-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 10px; }
-        .prayer-item { background: rgba(255,255,255,0.1); padding: 8px 2px; border-radius: 6px; text-align: center; }
+        .prayer-item { background: rgba(255,255,255,0.1); padding: 8px 2px; border-radius: 6px; text-align: center; transition: 0.3s; }
+        .prayer-item.active { background: rgba(0, 108, 53, 0.4); border: 1px solid var(--saudi-green); }
         .p-n { display: block; font-size: 10px; color: #bbb; }
         .p-t { display: block; font-size: 12px; font-weight: bold; color: var(--gold); }
         .controls-area { padding: 15px; background: var(--card-bg); border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
@@ -39,11 +40,11 @@
     <div class="prayer-header">
         <div id="countdown">باقي على أذان <span id="next-p-name">--</span> <span id="timer">00:00:00</span></div>
         <div class="prayer-grid">
-            <div class="prayer-item"><span class="p-n">الفجر</span><span class="p-t" id="Fajr">--:--</span></div>
-            <div class="prayer-item"><span class="p-n">الظهر</span><span class="p-t" id="Dhuhr">--:--</span></div>
-            <div class="prayer-item"><span class="p-n">العصر</span><span class="p-t" id="Asr">--:--</span></div>
-            <div class="prayer-item"><span class="p-n">المغرب</span><span class="p-t" id="Maghrib">--:--</span></div>
-            <div class="prayer-item"><span class="p-n">العشاء</span><span class="p-t" id="Isha">--:--</span></div>
+            <div class="prayer-item" id="item-Fajr"><span class="p-n">الفجر</span><span class="p-t" id="Fajr">--:--</span></div>
+            <div class="prayer-item" id="item-Dhuhr"><span class="p-n">الظهر</span><span class="p-t" id="Dhuhr">--:--</span></div>
+            <div class="prayer-item" id="item-Asr"><span class="p-n">العصر</span><span class="p-t" id="Asr">--:--</span></div>
+            <div class="prayer-item" id="item-Maghrib"><span class="p-n">المغرب</span><span class="p-t" id="Maghrib">--:--</span></div>
+            <div class="prayer-item" id="item-Isha"><span class="p-n">العشاء</span><span class="p-t" id="Isha">--:--</span></div>
         </div>
     </div>
     <div class="controls-area">
@@ -71,28 +72,37 @@
     <div class="grid" id="calendarGrid"></div>
     <div class="shamel-footer"><a href="https://ksashamel.github.io" target="_blank" class="btn-shamel">شامل</a></div>
 </div>
+
 <script>
     let viewDate = new Date(), isHijri = true, prayerTimes = {};
+    const namesAr = {Fajr:'الفجر', Dhuhr:'الظهر', Asr:'العصر', Maghrib:'المغرب', Isha:'العشاء'};
 
     async function fetchPrayers(city, lat = null, lon = null) {
         let url = (lat && lon) ? 
             `https://api.aladhan.com{lat}&longitude=${lon}&method=4` : 
             `https://api.aladhan.com{city}&country=SA&method=4`;
+        
         try {
             const r = await fetch(url);
             const d = await r.json();
             prayerTimes = d.data.timings;
-            if(!lat) document.getElementById('current-location-display').innerText = `المدينة الحالية: ${document.getElementById('citySelect').options[document.getElementById('citySelect').selectedIndex].text}`;
-            else document.getElementById('current-location-display').innerText = "تم التحديد عبر موقعك الحالي";
+            
+            if(!lat) {
+                const select = document.getElementById('citySelect');
+                document.getElementById('current-location-display').innerText = `المدينة الحالية: ${select.options[select.selectedIndex].text}`;
+            } else {
+                document.getElementById('current-location-display').innerText = "تم التحديد عبر موقعك الحالي";
+            }
             updatePrayerUI();
-        } catch(e) { console.error("API Error"); }
+        } catch(e) { console.error("API Error:", e); }
     }
 
     function updatePrayerUI() {
         ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].forEach(p => {
             let [h, m] = prayerTimes[p].split(':');
             let hrs = parseInt(h);
-            document.getElementById(p).innerText = `${hrs % 12 || 12}:${m} ${hrs >= 12 ? 'م' : 'ص'}`;
+            let ampm = hrs >= 12 ? 'م' : 'ص';
+            document.getElementById(p).innerText = `${hrs % 12 || 12}:${m} ${ampm}`;
         });
         startCountdown();
     }
@@ -104,21 +114,27 @@
             const now = new Date();
             const list = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
             let next = null;
+            
             for (let p of list) {
                 let [h, m] = prayerTimes[p].split(':');
                 let d = new Date(); d.setHours(parseInt(h), parseInt(m), 0);
                 if (d > now) { next = { n: p, t: d }; break; }
             }
+            
             if(!next) {
                 let [h, m] = prayerTimes['Fajr'].split(':');
                 let d = new Date(); d.setDate(d.getDate() + 1); d.setHours(parseInt(h), parseInt(m), 0);
                 next = { n: 'Fajr', t: d };
             }
+            
             let diff = next.t - now;
             let hh = Math.floor(diff/3600000), mm = Math.floor((diff%3600000)/60000), ss = Math.floor((diff%60000)/1000);
-            const names = {Fajr:'الفجر', Dhuhr:'الظهر', Asr:'العصر', Maghrib:'المغرب', Isha:'العشاء'};
-            document.getElementById('next-p-name').innerText = names[next.n];
+            
+            document.getElementById('next-p-name').innerText = namesAr[next.n];
             document.getElementById('timer').innerText = `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+            
+            document.querySelectorAll('.prayer-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`item-${next.n}`).classList.add('active');
         }, 1000);
     }
 
@@ -126,21 +142,20 @@
         const grid = document.getElementById('calendarGrid');
         grid.innerHTML = '';
         ['ح','ن','ث','ر','خ','ج','س'].forEach(d => grid.innerHTML += `<div class="day-name">${d}</div>`);
-        let m = viewDate.getMonth(), y = viewDate.getFullYear();
         
+        let m = viewDate.getMonth(), y = viewDate.getFullYear();
         let locale = isHijri ? 'ar-SA-u-ca-islamic-uma' : 'ar-SA';
+        
         document.getElementById('monthDisplay').innerText = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(viewDate);
 
         let firstDay = new Date(y, m, 1).getDay();
         let lastDay = new Date(y, m + 1, 0).getDate();
+        
         for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div></div>`;
         for (let d = 1; d <= lastDay; d++) {
             let cur = new Date(y, m, d);
             let isT = new Date().toDateString() === cur.toDateString();
-            let displayNum = d;
-            if (isHijri) {
-                displayNum = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-uma', { day: 'numeric' }).format(cur);
-            }
+            let displayNum = isHijri ? new Intl.DateTimeFormat('ar-SA-u-ca-islamic-uma', {day:'numeric'}).format(cur) : d;
             grid.innerHTML += `<div class="day-cell ${isT ? 'today' : ''}"><span class="day-num">${displayNum}</span></div>`;
         }
     }
@@ -150,8 +165,17 @@
         document.getElementById('modeBtn').innerText = isHijri ? "التبديل للميلادي" : "التبديل للهجري"; 
         renderCalendar(); 
     }
+    
     function changeMonth(s) { viewDate.setMonth(viewDate.getMonth() + s); renderCalendar(); }
-    function syncLocation() { if (navigator.geolocation) { navigator.geolocation.getCurrentPosition(p => fetchPrayers(null, p.coords.latitude, p.coords.longitude), () => fetchPrayers('Makkah')); } }
+    
+    function syncLocation() { 
+        if (navigator.geolocation) { 
+            navigator.geolocation.getCurrentPosition(
+                p => fetchPrayers(null, p.coords.latitude, p.coords.longitude),
+                err => { console.warn(err); fetchPrayers('Makkah'); }
+            ); 
+        } 
+    }
 
     fetchPrayers('Makkah'); renderCalendar();
 </script>

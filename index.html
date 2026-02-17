@@ -3,48 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تقويم أم القرى الذكي - المطور</title>
+    <title>تقويم أم القرى الذكي - النسخة الاحترافية</title>
     <style>
         :root { --saudi-green: #006C35; --primary: #0078d4; --gold: #ffd700; --bg: #f4f7f6; --text: #222; --card-bg: #fff; --border: #ddd; }
         body.dark { --bg: #1a1a1a; --text: #eaeaea; --card-bg: #2a2a2a; --border: #444; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 20px; margin: 0; transition: 0.3s; }
-        
         .calendar-card { background: var(--card-bg); width: 100%; max-width: 420px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid var(--border); }
-        
-        /* قسم الأذان العلوي */
         .prayer-header { background: #222; color: #fff; padding: 15px; text-align: center; border-bottom: 3px solid var(--saudi-green); }
         #timer { color: var(--gold); font-weight: bold; font-family: monospace; font-size: 17px; }
         .prayer-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 10px; }
-        .prayer-item { background: rgba(255,255,255,0.1); padding: 8px 2px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); }
+        .prayer-item { background: rgba(255,255,255,0.1); padding: 8px 2px; border-radius: 6px; text-align: center; }
         .p-n { display: block; font-size: 10px; color: #bbb; }
         .p-t { display: block; font-size: 12px; font-weight: bold; color: var(--gold); }
-
-        /* منطقة التحكم */
         .controls-area { padding: 15px; background: var(--card-bg); border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
-        .select-city { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); font-family: inherit; }
-        .btn-gps { width: 100%; padding: 10px; background: var(--saudi-green); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-gps:hover { opacity: 0.9; }
-        
+        .select-city { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); }
+        .btn-gps { width: 100%; padding: 10px; background: var(--saudi-green); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; }
         .nav-btn { cursor: pointer; border: none; background: #f0f0f0; padding: 8px 14px; border-radius: 6px; }
         body.dark .nav-btn { background: #444; color: #fff; }
-
         .switch-mode { display: flex; justify-content: center; padding: 10px; gap: 10px; }
-        .toggle-btn, .dark-btn { cursor: pointer; padding: 6px 15px; background: #eee; border: 1px solid var(--border); border-radius: 20px; font-size: 12px; font-weight: 600; color: #444; }
-        body.dark .toggle-btn, body.dark .dark-btn { background: #444; color: #fff; }
-
+        .toggle-btn { cursor: pointer; padding: 6px 15px; background: #eee; border: 1px solid var(--border); border-radius: 20px; font-size: 12px; color: #444; }
+        body.dark .toggle-btn { background: #444; color: #fff; }
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); padding: 10px; }
         .day-name { text-align: center; font-size: 11px; font-weight: bold; color: #999; padding-bottom: 10px; }
         .day-cell { height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 15px; }
         .day-cell.today { background: var(--primary); color: white; font-weight: bold; }
-        .day-cell.other-month { opacity: 0.2; }
         #status { font-size: 11px; text-align: center; color: var(--saudi-green); font-weight: bold; min-height: 15px; }
     </style>
 </head>
 <body>
 
 <div class="calendar-card">
-    <!-- أوقات الصلاة في الأعلى -->
     <div class="prayer-header">
         <div id="countdown">أذان <span id="next-p-name">--</span> خلال <span id="timer">00:00:00</span></div>
         <div class="prayer-grid">
@@ -56,10 +45,9 @@
         </div>
     </div>
 
-    <!-- خيارات اختيار المدينة والمزامنة -->
     <div class="controls-area">
         <select class="select-city" id="citySelect" onchange="fetchByCity(this.value)">
-            <option value="" disabled selected>اختر المدينة...</option>
+            <option value="" disabled selected>اختر مدينة...</option>
             <option value="Makkah">مكة المكرمة</option>
             <option value="Riyadh">الرياض</option>
             <option value="Medina">المدينة المنورة</option>
@@ -67,18 +55,14 @@
             <option value="Dammam">الدمام</option>
             <option value="Abha">أبها</option>
             <option value="Tabuk">تبوك</option>
-            <option value="Buraidah">بريدة</option>
-            <option value="Hail">حائل</option>
-            <option value="Jizan">جيزان</option>
-            <option value="Najran">نجران</option>
         </select>
-        <button class="btn-gps" onclick="getLocation()">📍 مزامنة تلقائية (حسب موقعي الحالي)</button>
+        <button class="btn-gps" onclick="getLocation()">📍 مزامنة تلقائية للموقع</button>
         <div id="status"></div>
     </div>
 
     <div class="switch-mode">
-        <button class="toggle-btn" id="modeBtn" onclick="toggleMode()">التبديل للميلادي</button>
-        <button class="dark-btn" onclick="toggleDark()">🌙 الوضع الليلي</button>
+        <button class="toggle-btn" onclick="toggleMode()" id="modeBtn">التبديل للميلادي</button>
+        <button class="toggle-btn" onclick="toggleDark()">🌙 الوضع الليلي</button>
     </div>
 
     <div class="header">
@@ -86,45 +70,42 @@
         <div class="month-label" id="monthDisplay">--</div>
         <button class="nav-btn" onclick="changeMonth(1)">❯</button>
     </div>
-
     <div class="grid" id="calendarGrid"></div>
 </div>
 
 <script>
-    let viewDate = new Date();
-    let isHijri = true;
-    let prayerTimes = {};
-    let countdownInterval;
+    let viewDate = new Date(), isHijri = true, prayerTimes = {}, countdownInterval;
 
-    async function safeFetch(url) {
+    // استخدام محرك جلب بيانات يتجاوز قيود CORS
+    async function safeFetch(apiUrl) {
         const status = document.getElementById('status');
-        status.innerText = "جاري المزامنة...";
+        status.innerText = "جاري الاتصال بالسيرفر...";
         try {
-            const response = await fetch(url);
-            const data = await response.json();
+            // إضافة Random لمنع المتصفح من استخدام بيانات قديمة
+            const response = await fetch(`https://api.allorigins.win{encodeURIComponent(apiUrl)}&ts=${Date.now()}`);
+            const wrapper = await response.json();
+            const data = JSON.parse(wrapper.contents);
+            
             if (data && data.data) {
                 prayerTimes = data.data.timings;
                 ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].forEach(p => {
                     document.getElementById(p).innerText = prayerTimes[p].substring(0, 5);
                 });
-                status.innerText = "تم تحديث المواقيت بنجاح ✅";
+                status.innerText = "تم التحديث بنجاح ✅";
                 startCountdown();
             }
-        } catch (e) { status.innerText = "⚠️ خطأ في الاتصال بالخدمة"; }
+        } catch (e) {
+            status.innerText = "⚠️ فشل الاتصال. جرب اختيار مدينة يدوياً.";
+        }
     }
 
-    function fetchByCity(city) { 
-        safeFetch(`https://api.aladhan.com{city}&country=SA&method=4`); 
-    }
+    function fetchByCity(city) { safeFetch(`https://api.aladhan.com{city}&country=SA&method=4`); }
 
     function getLocation() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((pos) => {
                 safeFetch(`https://api.aladhan.com{pos.coords.latitude}&longitude=${pos.coords.longitude}&method=4`);
-                document.getElementById('citySelect').value = ""; // إعادة ضبط القائمة
-            }, () => alert("يرجى تفعيل إذن الوصول للموقع في المتصفح."));
-        } else {
-            alert("متصفحك لا يدعم تحديد الموقع.");
+            }, () => alert("يرجى تفعيل إذن الموقع."));
         }
     }
 
@@ -154,26 +135,18 @@
     }
 
     function render() {
-        const grid = document.getElementById('calendarGrid');
-        grid.innerHTML = '';
+        const grid = document.getElementById('calendarGrid'); grid.innerHTML = '';
         ['ح','ن','ث','ر','خ','ج','س'].forEach(d => grid.innerHTML += `<div class="day-name">${d}</div>`);
         const lang = isHijri ? 'ar-SA-u-ca-islamic-umalqura' : 'ar-SA';
         document.getElementById('monthDisplay').innerText = new Intl.DateTimeFormat(lang, {month: 'long', year: 'numeric'}).format(viewDate);
-        document.getElementById('modeBtn').innerText = isHijri ? "التبديل للميلادي" : "التبديل للهجري";
         let temp = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
-        if (isHijri) {
-            for(let i=0; i<32; i++) {
-                if (parseInt(new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {day:'numeric'}).format(temp)) === 1) break;
-                temp.setDate(temp.getDate() - 1);
-            }
-        }
+        if (isHijri) { for(let i=0; i<32; i++) { if (parseInt(new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {day:'numeric'}).format(temp)) === 1) break; temp.setDate(temp.getDate() - 1); } }
         let offset = temp.getDay();
         for (let i = 0; i < 35; i++) {
             const cell = document.createElement('div'); cell.className = 'day-cell';
             let d = new Date(temp); d.setDate(d.getDate() + (i - offset));
             cell.innerText = new Intl.DateTimeFormat(isHijri ? 'en-u-ca-islamic-umalqura' : 'en-US', {day: 'numeric'}).format(d);
             if (d.toDateString() === new Date().toDateString()) cell.classList.add('today');
-            if (isHijri && d.getMonth() !== temp.getMonth() && i < offset) cell.classList.add('other-month');
             grid.appendChild(cell);
         }
     }

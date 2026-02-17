@@ -60,10 +60,7 @@
                 <option value="Hail">حائل</option>
                 <option value="Jizan">جيزان</option>
                 <option value="Najran">نجران</option>
-                <option value="Sakaka">سكاكا</option>
-                <option value="Arar">عرعر</option>
                 <option value="Taif">الطائف</option>
-                <option value="AlKhobar">الخبر</option>
             </optgroup>
         </select>
         <button class="btn-gps" onclick="getLocation()">📍 مزامنة دقيقة عبر موقعك الحالي</button>
@@ -97,10 +94,7 @@
         Hail: { Fajr: "05:18", Dhuhr: "12:22", Asr: "15:48", Maghrib: "18:15", Isha: "19:45" },
         Jizan: { Fajr: "05:15", Dhuhr: "12:25", Asr: "15:45", Maghrib: "18:18", Isha: "19:48" },
         Najran: { Fajr: "05:05", Dhuhr: "12:15", Asr: "15:35", Maghrib: "18:08", Isha: "19:38" },
-        Sakaka: { Fajr: "05:35", Dhuhr: "12:38", Asr: "16:02", Maghrib: "18:35", Isha: "20:05" },
-        Arar: { Fajr: "05:28", Dhuhr: "12:32", Asr: "15:55", Maghrib: "18:28", Isha: "19:58" },
-        Taif: { Fajr: "05:16", Dhuhr: "12:26", Asr: "15:46", Maghrib: "18:20", Isha: "19:50" },
-        AlKhobar: { Fajr: "04:42", Dhuhr: "11:53", Asr: "15:12", Maghrib: "17:46", Isha: "19:16" }
+        Taif: { Fajr: "05:16", Dhuhr: "12:26", Asr: "15:46", Maghrib: "18:20", Isha: "19:50" }
     };
 
     let currentPrayerTimes = saudiCitiesData.Makkah;
@@ -128,11 +122,16 @@
         navigator.geolocation.getCurrentPosition(async (pos) => {
             const lat = pos.coords.latitude;
             const lon = pos.coords.longitude;
-            // استخدام HTTPS لضمان عمل الرابط على GitHub
-            const url = `https://api.aladhan.com{lat}&longitude=${lon}&method=4`;
+            const apiUrl = `https://api.aladhan.com{lat}&longitude=${lon}&method=4`;
+            
+            // استخدام CORS Proxy لتجاوز الحماية
+            const proxyUrl = `https://api.allorigins.win{encodeURIComponent(apiUrl)}`;
+
             try {
-                const res = await fetch(url);
-                const data = await res.json();
+                const response = await fetch(proxyUrl);
+                const wrapper = await response.json();
+                const data = JSON.parse(wrapper.contents);
+                
                 if (data && data.data) {
                     currentPrayerTimes = data.data.timings;
                     applyTimes();
@@ -159,9 +158,9 @@
                 if (d > now) { next = { ...p, d: d }; break; }
             }
             if (!next) { 
-                const [h, m] = pList[0].t.split(':');
+                const [h, m] = pList.t.split(':');
                 const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(h, m, 0);
-                next = { ...pList[0], d: d };
+                next = { ...pList, d: d };
             }
             const diff = next.d - now;
             const hh = String(Math.floor(diff / 3600000)).padStart(2,'0');

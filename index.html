@@ -35,8 +35,7 @@
         .day-name { text-align: center; font-size: 11px; font-weight: bold; color: #999; padding-bottom: 10px; }
         .day-cell { height: 45px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; font-size: 15px; position: relative; cursor: pointer; }
         .day-cell.today { background: var(--primary); color: white; font-weight: bold; }
-        .day-cell[data-event]:hover::after { content: attr(data-event); position: absolute; bottom: 105%; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 10px; white-space: nowrap; z-index: 100; }
-
+        
         .shamel-footer { padding: 20px 10px; text-align: center; border-top: 1px solid var(--border); }
         .btn-shamel { display: inline-block; width: 85%; padding: 14px 0; background: #2c2c2c; color: #fff !important; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; border: 2px solid var(--neon-green); box-shadow: 0 0 10px rgba(57, 255, 20, 0.4); transition: 0.3s; }
     </style>
@@ -44,7 +43,7 @@
 <body class="dark">
 <div class="calendar-card">
     <div class="prayer-header">
-        <span id="timer-label">جاري التحميل...</span>
+        <span id="timer-label">باقي على الأذان القادم</span>
         <span id="timer">00:00:00</span>
         <div class="prayer-grid">
             <div class="prayer-item"><span class="p-n">الفجر</span><span class="p-t" id="Fajr">--:--</span></div>
@@ -82,7 +81,7 @@
         <button class="toggle-btn" onclick="changeMonth(1)">❯</button>
     </div>
     <div class="grid" id="calendarGrid"></div>
-    <div class="shamel-footer"><a href="https://ksashamel.github.io/shamel/" target="_blank" class="btn-shamel">شامل</a></div>
+    <div class="shamel-footer"><a href="https://ksashamel.github.io" target="_blank" class="btn-shamel">شامل</a></div>
 </div>
 
 <script>
@@ -109,8 +108,7 @@
 
     function toggleTheme() {
         document.body.classList.toggle('dark');
-        const isDark = document.body.classList.contains('dark');
-        document.getElementById('themeBtn').innerText = isDark ? "☀️ الوضع النهاري" : "🌙 الوضع الليلي";
+        document.getElementById('themeBtn').innerText = document.body.classList.contains('dark') ? "☀️ الوضع النهاري" : "🌙 الوضع الليلي";
     }
 
     function toggleCalendar() {
@@ -120,11 +118,7 @@
     }
 
     function changeMonth(step) {
-        if (isHijri) {
-            viewDate.setMonth(viewDate.getMonth() + step);
-        } else {
-            viewDate.setMonth(viewDate.getMonth() + step);
-        }
+        viewDate.setMonth(viewDate.getMonth() + step);
         renderCalendar();
     }
 
@@ -132,98 +126,86 @@
         const grid = document.getElementById('calendarGrid');
         const monthLabel = document.getElementById('monthDisplay');
         grid.innerHTML = "";
-
-        const days = ['ح', 'ن', 'ث', 'ر', 'خ', 'ج', 'س'];
-        days.forEach(d => grid.innerHTML += `<div class="day-name">${d}</div>`);
+        ['ح', 'ن', 'ث', 'ر', 'خ', 'ج', 'س'].forEach(d => grid.innerHTML += `<div class="day-name">${d}</div>`);
 
         if (isHijri) {
-            const options = { month: 'long', year: 'numeric', calendar: 'islamic-uma' };
-            const formatter = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-uma', options);
-            monthLabel.innerText = formatter.format(viewDate);
+            const titleOpt = { month: 'long', year: 'numeric', calendar: 'islamic-uma' };
+            monthLabel.innerText = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-uma', titleOpt).format(viewDate);
 
-            // الحصول على أول يوم في الشهر الهجري
-            let tempDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
-            let hDate = new Intl.DateTimeFormat('en-US-u-ca-islamic-uma', {day:'numeric'}).format(tempDate);
-            // العودة للخلف حتى نصل ليوم 1 هجري
-            while(parseInt(hDate) !== 1) {
-                tempDate.setDate(tempDate.getDate() - 1);
-                hDate = new Intl.DateTimeFormat('en-US-u-ca-islamic-uma', {day:'numeric'}).format(tempDate);
+            let temp = new Date(viewDate.getFullYear(), viewDate.getMonth(), viewDate.getDate());
+            let targetMonth = new Intl.DateTimeFormat('en-u-ca-islamic-uma', {month:'numeric'}).format(temp);
+            
+            let first = new Date(temp);
+            while(new Intl.DateTimeFormat('en-u-ca-islamic-uma', {month:'numeric'}).format(first) === targetMonth) {
+                first.setDate(first.getDate() - 1);
             }
-            
-            let startDay = tempDate.getDay();
-            for (let i = 0; i < startDay; i++) grid.innerHTML += `<div></div>`;
+            first.setDate(first.getDate() + 1);
 
-            let currentH = tempDate;
-            let currentMonth = new Intl.DateTimeFormat('en-US-u-ca-islamic-uma', {month:'numeric'}).format(currentH);
-            
-            while(new Intl.DateTimeFormat('en-US-u-ca-islamic-uma', {month:'numeric'}).format(currentH) === currentMonth) {
-                let dayNum = new Intl.DateTimeFormat('en-US-u-ca-islamic-uma', {day:'numeric'}).format(currentH);
-                let isToday = new Date().toDateString() === currentH.toDateString() ? "today" : "";
-                grid.innerHTML += `<div class="day-cell ${isToday}">${dayNum}</div>`;
-                currentH.setDate(currentH.getDate() + 1);
+            for (let i = 0; i < first.getDay(); i++) grid.innerHTML += `<div></div>`;
+
+            let runner = new Date(first);
+            while(new Intl.DateTimeFormat('en-u-ca-islamic-uma', {month:'numeric'}).format(runner) === targetMonth) {
+                let dNum = new Intl.DateTimeFormat('en-u-ca-islamic-uma', {day:'numeric'}).format(runner);
+                let isToday = new Date().toDateString() === runner.toDateString() ? "today" : "";
+                grid.innerHTML += `<div class="day-cell ${isToday}">${dNum}</div>`;
+                runner.setDate(runner.getDate() + 1);
             }
         } else {
-            const monthNames = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
-            monthLabel.innerText = `${monthNames[viewDate.getMonth()]} ${viewDate.getFullYear()}`;
-            
+            const months = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+            monthLabel.innerText = `${months[viewDate.getMonth()]} ${viewDate.getFullYear()}`;
             let firstDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay();
-            let totalDays = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
-
+            let total = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
             for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div></div>`;
-            for (let i = 1; i <= totalDays; i++) {
-                let isToday = (new Date().toDateString() === new Date(viewDate.getFullYear(), viewDate.getMonth(), i).toDateString()) ? "today" : "";
+            for (let i = 1; i <= total; i++) {
+                let isToday = new Date().toDateString() === new Date(viewDate.getFullYear(), viewDate.getMonth(), i).toDateString() ? "today" : "";
                 grid.innerHTML += `<div class="day-cell ${isToday}">${i}</div>`;
             }
         }
     }
 
+    function format12Hour(timeStr) {
+        let [h, m] = timeStr.split(':');
+        h = parseInt(h);
+        let suffix = h >= 12 ? "" : ""; // يمكنك إضافة ص أو م إذا أردت
+        h = h % 12 || 12;
+        return `${String(h).padStart(2, '0')}:${m}`;
+    }
+
     function updatePrayers(cityKey) {
         currentCity = cityKey;
         const data = saudiCities[cityKey];
-        const pNames = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
-        pNames.forEach(p => document.getElementById(p).innerText = data[p]);
+        ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"].forEach(p => {
+            document.getElementById(p).innerText = format12Hour(data[p]);
+        });
         startTimer();
     }
 
     function startTimer() {
         clearInterval(timerInterval);
         const pNames = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
-        const pArabic = ["الفجر", "الظهر", "العصر", "المغرب", "العشاء"];
+        const pAr = ["الفجر", "الظهر", "العصر", "المغرب", "العشاء"];
 
         timerInterval = setInterval(() => {
             const now = new Date();
             const data = saudiCities[currentCity];
-            let nextPrayer = null;
-            let nextName = "";
+            let nextP = null, nextN = "";
 
             for (let i = 0; i < pNames.length; i++) {
                 const [h, m] = data[pNames[i]].split(':');
-                const pDate = new Date();
-                pDate.setHours(h, m, 0);
-
-                if (pDate > now) {
-                    nextPrayer = pDate;
-                    nextName = pArabic[i];
-                    break;
-                }
+                const d = new Date(); d.setHours(h, m, 0);
+                if (d > now) { nextP = d; nextN = pAr[i]; break; }
             }
 
-            if (!nextPrayer) { // إذا انتهت صلوات اليوم، الموعد القادم هو فجر الغد
+            if (!nextP) {
                 const [h, m] = data["Fajr"].split(':');
-                nextPrayer = new Date();
-                nextPrayer.setDate(now.getDate() + 1);
-                nextPrayer.setHours(h, m, 0);
-                nextName = "الفجر";
+                nextP = new Date(); nextP.setDate(now.getDate() + 1); nextP.setHours(h, m, 0);
+                nextN = "الفجر";
             }
 
-            const diff = nextPrayer - now;
-            const hh = Math.floor(diff / 3600000);
-            const mm = Math.floor((diff % 3600000) / 60000);
-            const ss = Math.floor((diff % 60000) / 1000);
-
-            document.getElementById('timer-label').innerText = `باقي على صلاة ${nextName}`;
-            document.getElementById('timer').innerText = 
-                `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+            const diff = nextP - now;
+            const hh = Math.floor(diff / 3600000), mm = Math.floor((diff % 3600000) / 60000), ss = Math.floor((diff % 60000) / 1000);
+            document.getElementById('timer-label').innerText = `باقي على صلاة ${nextN}`;
+            document.getElementById('timer').innerText = `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
         }, 1000);
     }
 
@@ -231,9 +213,9 @@
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(pos => {
                 let closest = "Makkah", minDist = Infinity;
-                for (let city in saudiCities) {
-                    let d = Math.abs(saudiCities[city].lat - pos.coords.latitude);
-                    if (d < minDist) { minDist = d; closest = city; }
+                for (let c in saudiCities) {
+                    let d = Math.abs(saudiCities[c].lat - pos.coords.latitude);
+                    if (d < minDist) { minDist = d; closest = c; }
                 }
                 document.getElementById('citySelect').value = closest;
                 updatePrayers(closest);
@@ -241,7 +223,6 @@
         }
     }
 
-    // Initial load
     updatePrayers("Makkah");
     renderCalendar();
 </script>

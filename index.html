@@ -85,7 +85,7 @@
     <div class="grid" id="calendarGrid"></div>
 
     <div class="shamel-footer">
-        <a href="https://ksashamel.github.io" target="_blank" class="btn-shamel">شامل</a>
+        <a href="https://ksashamel.github.io/shamel/" target="_blank" class="btn-shamel">شامل</a>
     </div>
 
 </div>
@@ -203,40 +203,33 @@ function startCountdown() {
     }, 1000);
 }
 
-async function renderCalendar() {
+function renderCalendar() {
     const grid = document.getElementById('calendarGrid');
     grid.innerHTML = '';
     ['ح','ن','ث','ر','خ','ج','س'].forEach(d => grid.innerHTML += `<div class="day-name">${d}</div>`);
 
     let m = viewDate.getMonth(), y = viewDate.getFullYear();
 
-    let displayMonthName = "";
-    let daysCount = 30;
+    let locale = isHijri ? 'ar-SA-u-ca-islamic-umalqura' : 'ar-SA';
 
-    if (isHijri) {
-        let res = await fetch(`https://api.aladhan.com/v1/gToH?date=${y}-${m+1}-1`);
-        let data = await res.json();
-        let hijriMonth = data.data.hijri.month.ar;
-        let hijriYear = data.data.hijri.year;
-
-        displayMonthName = `${hijriMonth} ${hijriYear}`;
-        daysCount = 30;
-    } else {
-        displayMonthName = new Intl.DateTimeFormat('ar-SA', { month: 'long', year: 'numeric' }).format(viewDate);
-        daysCount = new Date(y, m + 1, 0).getDate();
-    }
-
-    document.getElementById('monthDisplay').innerText = displayMonthName;
+    document.getElementById('monthDisplay').innerText =
+        new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(viewDate);
 
     let firstDay = new Date(y, m, 1).getDay();
+    let lastDay = new Date(y, m + 1, 0).getDate();
+
     for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div></div>`;
 
-    for (let d = 1; d <= daysCount; d++) {
+    for (let d = 1; d <= lastDay; d++) {
         let cur = new Date(y, m, d);
         let isT = new Date().toDateString() === cur.toDateString();
 
+        let displayNum = isHijri
+            ? new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', { day: 'numeric' }).format(cur)
+            : d;
+
         grid.innerHTML += `<div class="day-cell ${isT ? 'today' : ''}">
-            <span class="day-num">${d}</span>
+            <span class="day-num">${displayNum}</span>
         </div>`;
     }
 }
